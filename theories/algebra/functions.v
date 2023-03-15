@@ -4,7 +4,7 @@ From iris_ora.algebra Require Export ora.
 From iris.prelude Require Import options.
 
 Section ora.
-  Context {A : Type} `{Heqdec : !EqDecision A} {B : A → uora}.
+  Context {A : Type} `{Hfin : Finite A} {B : A → uora}.
   Implicit Types x : A.
   Implicit Types f g : discrete_fun B.
 

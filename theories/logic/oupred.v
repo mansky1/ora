@@ -550,7 +550,7 @@ Canonical Structure ouPredI (M : uora) : bi :=
 (* Latest notation *)
 Notation "✓ x" := (ouPred_ora_valid x) (at level 20) : bi_scope.
 
-Instance ouPred_later_contractive M : Contractive (bi_later (PROP:=ouPredI M)).
+Global Instance ouPred_later_contractive M : Contractive (bi_later (PROP:=ouPredI M)).
 Proof.
   unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try lia.
   apply HPQ, cmra_validN_S; auto.
@@ -786,7 +786,7 @@ Lemma option_validI {A : ora} (mx : option A) :
   ✓ mx ⊣⊢ match mx with Some x => ✓ x | None => True : ouPred M end.
 Proof. unseal. by destruct mx. Qed.
 
-Lemma discrete_fun_validI `{EqDecision A} {B : A → uora} (g : discrete_fun B) :
+Lemma discrete_fun_validI `{Finite A} {B : A → uora} (g : discrete_fun B) :
   (✓ g : ouPred M) ⊣⊢ ∀ i, ✓ g i.
 Proof. by ouPred.unseal. Qed.
 

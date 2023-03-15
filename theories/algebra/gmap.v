@@ -5,6 +5,15 @@ From iris.algebra Require Import updates local_updates proofmode_classes big_op.
 From iris.prelude Require Import options.
 From iris_ora.algebra Require Export ora.
 
+Lemma list_choice : forall {A B} (P : A -> B -> Prop) l, Forall (fun a => exists b, P a b) l ->
+  exists l', Forall2 P l l'.
+Proof.
+  induction l.
+  - exists nil; constructor.
+  - inversion 1 as [| ?? [??]]; subst.
+    destruct IHl; eauto.
+Qed.
+
 Section ora.
 
 Context `{Countable K} {A : ora}.
@@ -37,21 +46,77 @@ Proof.
     apply (ora_core_monoN n (x !! i)); auto.
   - intros ???? Hx Hord.
     hnf in Hord.
-    setoid_rewrite lookup_op in Hord.
-    assert (FUN := λ i, ora_op_extend n (x !! i) (y1 !! i) (y2 !! i) (Hx i) (Hord i)).
-    exists (map_imap (λ x _, projT1 (FUN x)) x), (map_imap (λ x _, proj1_sig (projT2 (FUN x))) x).
-    split; [|split]=>i; [rewrite lookup_op| |]; rewrite !map_lookup_imap;
-      destruct (FUN i) as (z1&z2&?&?&?); destruct (x !! i) eqn: Hi; rewrite Hi; try done; simpl.
-    + destruct (z1 ⋅ z2) eqn: Hop; try contradiction.
-      apply op_None in Hop as []; subst; auto.
-    + destruct (z1 ⋅ z2) eqn: Hop; try contradiction.
-      apply op_None in Hop as []; subst; auto.
+    destruct (list_choice (λ '(i, a) yy,
+      yy.1 ⋅ yy.2 ≼ₒ{S n} Some a ∧ yy.1 ≡{n}≡ y1 !! i ∧ yy.2 ≡{n}≡ y2 !! i) (map_to_list x)) as [gg Hgg].
+    { rewrite (Forall_iff _ _ (uncurry (λ i a, (∃ yy,
+        yy.1 ⋅ yy.2 ≼ₒ{S n} Some a ∧ yy.1 ≡{n}≡ y1 !! i ∧ yy.2 ≡{n}≡ y2 !! i)))); last by intros (?, ?).
+      rewrite -map_Forall_to_list; intros ? a Ha.
+      destruct (ora_op_extend n (Some a) (y1 !! i) (y2 !! i)) as (z1&z2&Hz).
+      * by specialize (Hx i); rewrite Ha in Hx.
+      * rewrite -lookup_op; specialize (Hord i); rewrite Ha in Hord; apply Hord.
+      * exists (z1, z2); eauto. }
+    exists (map_imap (λ i _, (list_find(A := (_ * ora_car A) * _) (λ e, e.1.1 = i) (zip (map_to_list x) gg)) ≫= (fun e => e.2.2.1)) x),
+           (map_imap (λ i _, (list_find(A := (_ * ora_car A) * _) (λ e, e.1.1 = i) (zip (map_to_list x) gg)) ≫= (fun e => e.2.2.2)) x).
+    assert (forall i a, x !! i = Some a -> exists ni yy1 yy2, list_find (λ e, e.1.1 = i) (zip (map_to_list x) gg) =
+      Some (ni, ((i, a), (yy1, yy2))) /\ yy1 ⋅ yy2 ≼ₒ{S n} Some a ∧ yy1 ≡{n}≡ y1 !! i ∧ yy2 ≡{n}≡ y2 !! i) as Hgg'.
+    { intros ?? Hxi.
+      pose proof (proj2 (elem_of_map_to_list _ _ _) Hxi) as Helem.
+      apply elem_of_list_lookup_1 in Helem as (ni & Hmap).
+      eapply Forall2_lookup_l in Hgg as ((yy1, yy2) & ? & Hgg); eauto; simpl in *.
+      exists ni, yy1, yy2.
+      rewrite (proj2 (list_find_Some _ _ ni ((i, a), (yy1, yy2)))) /=; first done.
+      rewrite lookup_zip_with_Some; split; [|split]; eauto.
+      intros ? (? & ? & ?) Hzip ??; subst; simpl in *.
+      apply lookup_zip_with_Some in Hzip as (e & ? & Heq & Hj & ?); inversion Heq; subst.
+      pose proof (NoDup_lookup _ j ni e.1 (NoDup_fst_map_to_list x)) as Hnodup.
+      rewrite !list_lookup_fmap Hmap Hj in Hnodup; destruct Hnodup; try done; lia. }
+    split.
+    + intros i.
+      rewrite lookup_op !map_lookup_imap.
+      destruct (x !! i) eqn: Hxi; rewrite Hxi /= //.
+      destruct (Hgg' _ _ Hxi) as (? & ? & ? & -> & ? & _); auto.
+    + split; intros i; rewrite map_lookup_imap; destruct (x !! i) eqn: Hxi; rewrite Hxi /=.
+      * destruct (Hgg' _ _ Hxi) as (? & ? & ? & -> & ? & ? & ?); auto.
+      * specialize (Hord i); rewrite Hxi lookup_op in Hord.
+        destruct (op _ _) eqn: Hop; try done.
+        rewrite op_None in Hop; destruct Hop as [Hy1 _].
+        by rewrite Hy1.
+      * destruct (Hgg' _ _ Hxi) as (? & ? & ? & -> & ? & ? & ?); auto.
+      * specialize (Hord i); rewrite Hxi lookup_op in Hord.
+        destruct (op _ _) eqn: Hop; try done.
+        rewrite op_None in Hop; destruct Hop as [_ Hy2].
+        by rewrite Hy2.
   - intros ??? Hx Hord.
-    assert (FUN := λ i, ora_extend n (x !! i) (y !! i) (Hx i) (Hord i)).
-    exists (map_imap (λ x _, proj1_sig (FUN x)) x).
-    split=>i; rewrite !map_lookup_imap;
-      destruct (FUN i) as (z&?&?); destruct (x !! i) eqn: Hi; rewrite Hi; try done; simpl.
-    destruct z; done.
+    destruct (list_choice (λ '(i, a) yy, yy ≼ₒ{S n} Some a ∧ yy ≡{n}≡ y !! i) (map_to_list x)) as [gg Hgg].
+    { rewrite (Forall_iff _ _ (uncurry (λ i a, (∃ yy, yy ≼ₒ{S n} Some a ∧ yy ≡{n}≡ y !! i)))); last by intros (?, ?).
+      rewrite -map_Forall_to_list; intros ? a Ha.
+      destruct (ora_extend n (Some a) (y !! i)) as (z&Hz).
+      * by specialize (Hx i); rewrite Ha in Hx.
+      * specialize (Hord i); rewrite Ha in Hord; apply Hord.
+      * exists z; eauto. }
+    exists (map_imap (λ i _, (list_find(A := (_ * ora_car A) * _) (λ e, e.1.1 = i) (zip (map_to_list x) gg)) ≫= (fun e => e.2.2)) x).
+    assert (forall i a, x !! i = Some a -> exists ni yy, list_find (λ e, e.1.1 = i) (zip (map_to_list x) gg) =
+      Some (ni, ((i, a), yy)) /\ yy ≼ₒ{S n} Some a ∧ yy ≡{n}≡ y !! i) as Hgg'.
+    { intros ?? Hxi.
+      pose proof (proj2 (elem_of_map_to_list _ _ _) Hxi) as Helem.
+      apply elem_of_list_lookup_1 in Helem as (ni & Hmap).
+      eapply Forall2_lookup_l in Hgg as (yy & ? & Hgg); eauto; simpl in *.
+      exists ni, yy.
+      rewrite (proj2 (list_find_Some _ _ ni ((i, a), yy))) /=; first done.
+      rewrite lookup_zip_with_Some; split; [|split]; eauto.
+      intros ? (? & ?) Hzip ??; subst; simpl in *.
+      apply lookup_zip_with_Some in Hzip as (e & ? & Heq & Hj & ?); inversion Heq; subst.
+      pose proof (NoDup_lookup _ j ni e.1 (NoDup_fst_map_to_list x)) as Hnodup.
+      rewrite !list_lookup_fmap Hmap Hj in Hnodup; destruct Hnodup; try done; lia. }
+    split.
+    + intros i.
+      rewrite !map_lookup_imap.
+      destruct (x !! i) eqn: Hxi; rewrite Hxi /= //.
+      destruct (Hgg' _ _ Hxi) as (? & ? & -> & ? & _); auto.
+    + intros i; rewrite map_lookup_imap; destruct (x !! i) eqn: Hxi; rewrite Hxi /=.
+      * destruct (Hgg' _ _ Hxi) as (? & ? & -> & ? & ?); auto.
+      * specialize (Hord i); rewrite Hxi in Hord.
+        destruct (y !! i) eqn: Hy; rewrite Hy in Hord |- *; done.
   - intros ?????.
     apply (@ora_dist_orderN (optionR A)); auto.
   - intros ??? Hord i.

@@ -25,6 +25,9 @@ Hint Extern 0 (_ ≼ₒ{_} _) => reflexivity : core.
 Class Increasing `{Op A, OraOrder A} (x : A) := increasing : ∀ y, y ≼ₒ x ⋅ y.
 Arguments increasing {_ _ _} _ {_}.
 
+(*Class IncreasingN `{Op A, OraOrderN A} n (x : A) := increasingN : ∀ y, y ≼ₒ{n} x ⋅ y.
+Arguments increasingN {_ _ _} _ _ {_}.*)
+
 Section mixin.
   Context (A : Type).
 
@@ -42,9 +45,9 @@ Section mixin.
     (* This follows from ora_extend + cmra_extend. *)
     mixin_ora_op_extend n x y1 y2 :
       ✓{n} x → y1 ⋅ y2 ≼ₒ{n} x →
-      { z1 & { z2 | z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2 } };
+      ∃ z1 z2, z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2;
     mixin_ora_extend n x y :
-      ✓{n} x → y ≼ₒ{n} x → { z | z ≼ₒ{S n} x ∧ z ≡{n}≡ y };
+      ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{S n} x ∧ z ≡{n}≡ y;
     (* OraOrder *)
     mixin_ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y;
     mixin_ora_orderN_S n x y : x ≼ₒ{S n} y → x ≼ₒ{n} y;
@@ -121,10 +124,10 @@ Section ora_mixin.
   Proof. apply (mixin_ora_pcore_monoN _ (ora_mixin A)). Qed.
   Lemma ora_op_extend n x y1 y2 :
     ✓{n} x → y1 ⋅ y2 ≼ₒ{n} x →
-    { z1 & { z2 | z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2 } }.
+    ∃ z1 z2, z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2.
   Proof. apply (mixin_ora_op_extend _ (ora_mixin A)). Qed.
   Lemma ora_extend n x y :
-      ✓{n} x → y ≼ₒ{n} x → { z | z ≼ₒ{S n} x ∧ z ≡{n}≡ y }.
+      ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{S n} x ∧ z ≡{n}≡ y.
   Proof. apply (mixin_ora_extend _ (ora_mixin A)). Qed.
   Lemma ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y.
   Proof. apply (mixin_ora_dist_orderN _ (ora_mixin A)). Qed.
@@ -462,9 +465,12 @@ Proof. intros; etrans; eauto using ora_mono_l, ora_mono_r. Qed.
 Global Instance ora_monoN' n :
   Proper (OraorderN n ==> OraorderN n ==> OraorderN n) (@op A _).
 Proof. intros x1 x2 Hx y1 y2 Hy. by apply ora_monoN. Qed.
-Global Instance cmra_mono' :
+Global Instance ora_mono' :
   Proper (Oraorder ==> Oraorder ==> Oraorder) (@op A _).
 Proof. intros x1 x2 Hx y1 y2 Hy. by apply ora_mono. Qed.
+
+(*Global Instance Increasing_IncreasingN (x : A) n {H : Increasing x} : IncreasingN n x.
+Proof. by intros ?; apply ora_order_orderN. Qed.*)
 
 (* Lemma ora_order_dist_l n x1 x2 x1' : *)
 (*   x1 ≼ₒ x2 → x1' ≡{n}≡ x1 → ∃ x2', x1' ≼ₒ x2' ∧ x2' ≡{n}≡ x2. *)
@@ -771,9 +777,9 @@ Section ora_total.
   Context (core_monoN : ∀ n x y, x ≼ₒ{n} y → core x ≼ₒ{n} core y).
   Context (op_extend : ∀ (n : nat) (x y1 y2 : A),
               ✓{n} x → y1 ⋅ y2 ≼ₒ{n} x →
-              { z1 & { z2 : A | z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2 } } ).
+              ∃ z1 z2, z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2).
   Context (extend_order : ∀ (n : nat) (x y : A),
-              ✓{n} x → y ≼ₒ{n} x → { z : A | z ≼ₒ{S n} x ∧ z ≡{n}≡ y } ).
+              ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{S n} x ∧ z ≡{n}≡ y).
   Context (dist_orderN : ∀ (n : nat) (x y : A), x ≡{n}≡ y → x ≼ₒ{n} y).
   Context (orderN_S : ∀ (n : nat) (x y : A), x ≼ₒ{S n} y → x ≼ₒ{n} y).
   Context (OrderN_trans : ∀ n : nat, Transitive (OraorderN n)).
@@ -1177,8 +1183,8 @@ Section prod.
       assert (Increasing x2) as Hx2i.
       { intros z. by destruct (Hx (y1, z)) as [_ Hz]. }
       intros [z1 z2]; split; simpl.
-      + eapply ora_increasing_closed in Hx1i; eauto.
-      + eapply ora_increasing_closed in Hx2i; eauto.
+      + eapply ora_increasing_closed; eauto.
+      + eapply ora_increasing_closed; eauto.
     - intros n [x1 x2] [??] cx [??] Hcx; simpl in *.
       destruct (pcore x1) as [|] eqn:Heqx1; last done.
       destruct (pcore x2) as [|] eqn:Heqx2; last done.
@@ -1468,6 +1474,13 @@ Section option.
     intros [a|]; last done. apply ora_order_refl.
   Qed.
 
+(*  Lemma Some_increasingN n a : Increasing a ↔ IncreasingN n (Some a).
+  Proof.
+    split; intros Ha.
+    - intros [z|]; last by auto. apply ora_order_orderN, Ha.
+    - intros z. hnf in Ha. by specialize (Ha (Some z)).
+  Qed. *)
+
   Lemma option_ora_mixin : OraMixin (option A).
   Proof.
     apply ora_total_mixin; try apply optionR; try apply _; auto.
@@ -1484,14 +1497,14 @@ Section option.
       + apply Some_increasing. apply Hxy.
     - intros n ma mb; setoid_rewrite option_orderN'.
       intros [[-> [->|[? [Heq ?]]]]|[a [b [Ha [Hb Ho]]]]]; subst; simpl; eauto.
-      + left; split; trivial. rewrite /core; simpl.
+      + left; split; trivial.
         destruct (pcore x) as [cx|] eqn:Heqn; auto.
         right; eexists cx; split; eauto using ora_pcore_increasing.
       + destruct (pcore a) as [ca|] eqn:Heqa.
         * right. destruct (ora_pcore_monoN n a b ca); eauto.
         * left; split; auto.
           destruct (pcore b) as [cb|] eqn:Heqb; auto.
-          right; eexists; split; eauto. eapply ora_pcore_increasing; eauto.
+          right; eexists; split; eauto using ora_pcore_increasing.
     - intros n [x|] [y1|] [y2|] Hx; rewrite /op /OraorderN /= => Hysx; try tauto.
       * destruct (ora_op_extend n x y1 y2) as (z1&z2&?&?&?); auto.
         exists (Some z1), (Some z2); simpl; repeat split; by try apply Some_ne.
@@ -1727,7 +1740,7 @@ Qed.
 
 (* Dependently-typed functions over a discrete domain *)
 Section discrete_fun_ora.
-  Context {A : Type} `{Heqdec : !EqDecision A} {B : A → uora}.
+  Context {A : Type} `{Hfin : Finite A} {B : A → uora}.
   Implicit Types f g : discrete_fun B.
 
   Instance discrete_fun_op : Op (discrete_fun B) := λ f g x, f x ⋅ g x.
@@ -1746,8 +1759,8 @@ Section discrete_fun_ora.
     by intros [h Hh]; exists (h x); rewrite /op /discrete_fun_op_instance (Hh x).
   Qed.
 
-  Lemma discrete_fun_included_spec `{Hfin : Finite A} (f g : discrete_fun B) : f ≼ g ↔ ∀ x, f x ≼ g x.
-  Proof.
+  Lemma discrete_fun_included_spec (f g : discrete_fun B) : f ≼ g ↔ ∀ x, f x ≼ g x.
+  Proof using Hfin.
     split; [by intros [h Hh] x; exists (h x); rewrite /op /discrete_fun_op (Hh x)|].
     intros [h ?]%finite_choice. by exists h.
   Qed.
@@ -1767,7 +1780,7 @@ Section discrete_fun_ora.
   Qed.
 
   Lemma discrete_fun_ora_mixin : OraMixin (discrete_fun B).
-  Proof using Heqdec.
+  Proof using Hfin.
     apply ora_total_mixin.
     - eauto.
     - intros f g x. rewrite /op /discrete_fun_op /core /=.
@@ -1777,14 +1790,22 @@ Section discrete_fun_ora.
       by apply discrete_fun_increasing.
     - intros n f g Hfg x. rewrite /core /=. apply ora_core_monoN, Hfg.
     - intros n f f1 f2 Hf Hf12.
-      assert (FUN := λ x, ora_op_extend n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).
-      exists (λ x, projT1 (FUN x)), (λ x, proj1_sig (projT2 (FUN x))).
-      split; [|split]=>x; [rewrite discrete_fun_lookup_op| |];
-        by destruct (FUN x) as (?&?&?&?&?).
+(*      assert (FUN := λ x, ora_op_extend n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)). *)
+      destruct (finite_choice (λ x (yy : B x * B x),
+        yy.1 ⋅ yy.2 ≼ₒ{S n} f x ∧ yy.1 ≡{n}≡ f1 x ∧ yy.2 ≡{n}≡ f2 x)) as [gg Hgg].
+      { intros x; simpl.
+        destruct (ora_op_extend n (f x) (f1 x) (f2 x)) as (z1&z2&Hz);
+          first (by apply Hf); first by apply Hf12.
+        exists (z1, z2); eauto. }
+      exists (λ x, (gg x).1), (λ x, (gg x).2); naive_solver.
     - intros n f g Hf Hfg.
-      assert (FUN := λ x, ora_extend n (f x) (g x) (Hf x) (Hfg x)).
-      exists (λ x, proj1_sig (FUN x)).
-      split=>x; by destruct (FUN x) as (?&?&?).
+(*      assert (FUN := λ x, ora_extend n (f x) (g x) (Hf x) (Hfg x)). *)
+      destruct (finite_choice (λ x (y : B x), y ≼ₒ{S n} f x ∧ y ≡{n}≡ g x))
+        as [g' Hg'].
+      { intros x; simpl.
+        destruct (ora_extend n (f x) (g x)) as (z&Hz);
+          first (by apply Hf); first by apply Hfg. exists z; eauto. }
+      exists g'; naive_solver.
     - intros n f g Hfg x. apply ora_dist_orderN; apply Hfg.
     - intros n f g Hfg x. apply ora_orderN_S; apply Hfg.
     - intros n f g h Hfg Hgh x.
@@ -1822,11 +1843,11 @@ Section discrete_fun_ora.
   Proof. intros ? f Hf x. by apply: discrete. Qed.
 End discrete_fun_ora.
 
-Arguments discrete_funR {_ _} _.
-Arguments discrete_funUR {_ _} _.
+Arguments discrete_funR {_ _ _} _.
+Arguments discrete_funUR {_ _ _} _.
 
-Instance discrete_fun_map_ora_morphism
-    `{EqDecision A} {B1 B2 : A → uora} (f : ∀ x, B1 x → B2 x) :
+Global Instance discrete_fun_map_ora_morphism
+    `{Finite A} {B1 B2 : A → uora} (f : ∀ x, B1 x → B2 x) :
   (∀ x, OraMorphism (f x)) → OraMorphism (discrete_fun_map f).
 Proof.
   split; first apply _.
@@ -1839,25 +1860,25 @@ Proof.
   - intros g1 g2 i. by rewrite /discrete_fun_map discrete_fun_lookup_op ora_morphism_op.
 Qed.
 
-Program Definition discrete_funURF `{EqDecision C} (F : C → uorarFunctor) : uorarFunctor := {|
+Program Definition discrete_funURF `{Finite C} (F : C → uorarFunctor) : uorarFunctor := {|
   uorarFunctor_car A _ B _ := discrete_funUR (λ c, uorarFunctor_car (F c) A B);
   uorarFunctor_map A1 _ A2 _ B1 _ B2 _ fg := discrete_funO_map (λ c, uorarFunctor_map (F c) fg)
 |}.
 Next Obligation.
-  intros C ? F A1 ? A2 ? B1 ? B2 ? n ?? g.
+  intros C ?? F A1 ? A2 ? B1 ? B2 ? n ?? g.
   by apply discrete_funO_map_ne=>?; apply uorarFunctor_map_ne.
 Qed.
 Next Obligation.
-  intros C ? F A ? B ? g; simpl. rewrite -{2}(discrete_fun_map_id g).
+  intros C ?? F A ? B ? g; simpl. rewrite -{2}(discrete_fun_map_id g).
   apply discrete_fun_map_ext=> y; apply uorarFunctor_map_id.
 Qed.
 Next Obligation.
-  intros C ? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f1 f2 f1' f2' g. rewrite /=-discrete_fun_map_compose.
+  intros C ?? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f1 f2 f1' f2' g. rewrite /=-discrete_fun_map_compose.
   apply discrete_fun_map_ext=>y; apply uorarFunctor_map_compose.
 Qed.
-Instance discrete_funURF_contractive `{EqDecision C} (F : C → uorarFunctor) :
+Global Instance discrete_funURF_contractive `{Finite C} (F : C → uorarFunctor) :
   (∀ c, uorarFunctorContractive (F c)) → uorarFunctorContractive (discrete_funURF F).
 Proof.
-  intros ? A1 ? A2 ? B1 ? B2 ? n ?? g.
+  intros ?? A1 ? A2 ? B1 ? B2 ? n ?? g.
   by apply discrete_funO_map_ne=>c; apply uorarFunctor_map_contractive.
 Qed.
