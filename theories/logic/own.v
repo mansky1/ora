@@ -351,6 +351,9 @@ Proof.
   - done.
 Qed.
 
+(* Global Instance own_unit_affine A `{i : !inG Σ (A:uora)} γ : Affine (own γ (ε:A)).
+Proof. apply _. Qed. *)
+
 (** Big op class instances *)
 Section big_op_instances.
   Context `{!inG Σ (A:uora)}.

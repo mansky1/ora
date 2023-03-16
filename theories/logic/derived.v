@@ -96,13 +96,43 @@ Global Instance ouPred_ownM_sep_homomorphism :
 Proof. split; [split|]; try apply _; [apply ownM_op | apply ownM_unit']. Qed.
 
 (** Consistency/soundness statement *)
-Lemma bupd_plain_soundness P `{!Plain P} : (⊢ |==> P) → ⊢ ■ P.
+Lemma uora_unit_refl (A : uora) n : (ε : A) ≼ₒ{n} ε.
 Proof.
-  eapply bi_emp_valid_mono. etrans; last exact: bupd_plainly.
-  apply bupd_mono, plain, _.
+  rewrite -{2}(oracore_id_core ε); apply ora_order_orderN, uora_unit_order_core.
 Qed.
 
-(*Corollary soundness φ n : (⊢@{ouPredI M} ▷^n ⌜ φ ⌝) → φ.
+Lemma pure_soundness φ : (emp ⊢ ⌜ φ ⌝) → φ.
+Proof.
+  unseal=> -[H]. apply (H 0 ε); eauto using uora_unit_validN.
+  apply uora_unit_refl.
+Qed.
+
+Lemma internal_eq_soundness {A : ofe} (x y : A) : (True ⊢ x ≡ y) → x ≡ y.
+Proof.
+  unseal=> -[H]. apply equiv_dist=> n.
+  by apply (H n ε); eauto using uora_unit_validN.
+Qed.
+
+Lemma later_soundness P : (emp ⊢ ▷ P) → (emp ⊢ P).
+Proof.
+  unseal=> -[HP]; split=> n x Hx ?.
+  apply ouPred_mono with n ε; eauto.
+  apply (HP (S n)); eauto using uora_unit_validN.
+  apply uora_unit_refl.
+Qed.
+
+Lemma bupd_plain_soundness P `{!Plain P} : (⊢ |==> P) → ⊢ P.
+Proof.
+  split=> n x Hx ?.
+  apply ouPred_mono with n ε; eauto.
+  generalize (bupd_plainly P); rewrite /plainly /bi_plainly_plainly /= ouPred_plainly_eq /ouPred_plainly_def.
+  intros Hplain; eapply (ouPred_in_entails _ _ Hplain); eauto.
+  eapply bupd_mono, H; auto.
+  etrans; [apply Plain0|].
+  by unseal.
+Qed.
+
+Corollary soundness φ n : (⊢@{ouPredI M} ▷^n ⌜ φ ⌝) → φ.
 Proof.
   induction n as [|n IH]=> /=.
   - apply pure_soundness.
@@ -114,7 +144,5 @@ Proof. exact (soundness False n). Qed.
 
 Corollary consistency : ¬ ⊢@{ouPredI M} False.
 Proof. exact (consistency_modal 0). Qed.
-End derived.*)
-
 End derived.
 End ouPred.
