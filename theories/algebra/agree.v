@@ -183,17 +183,11 @@ Section agree_map.
   Global Instance agree_map_morphism : OraMorphism (agree_map f).
   Proof using Hf.
     split; first apply _.
-    - intros n x. rewrite !agree_validN_def=> Hv b b' /=.
-      intros (a&->&?)%elem_of_list_fmap (a'&->&?)%elem_of_list_fmap.
-      apply Hf; eauto.
     - intros n x y Hxy a; setoid_rewrite elem_of_list_fmap; intros [z [-> Hz]].
       destruct (Hxy _ Hz) as [w [Hw1 Hw2]].
       exists (f w); split; eauto.
       by rewrite Hw2.
     - intros x Hx. apply agree_increasing.
-    - done.
-    - intros x y n; split=> b /=;
-        rewrite !fmap_app; setoid_rewrite elem_of_app; eauto.
   Qed.
 End agree_map.
 

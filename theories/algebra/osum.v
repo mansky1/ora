@@ -234,17 +234,14 @@ End ora.
 Arguments csumR : clear implicits.
 
 (* Functor *)
-Instance csum_map_orara_morphism {A A' B B' : ora} (f : A → A') (g : B → B') :
+#[export] Instance csum_map_ora_morphism {A A' B B' : ora} (f : A → A') (g : B → B') :
   OraMorphism f → OraMorphism g → OraMorphism (csum_map f g).
 Proof.
   split; try apply _.
-  - intros n [a|b|]; simpl; auto using ora_morphism_validN.
   - intros n [a|b|] [a'|b'|]; simpl; try done;
         rewrite -?Cinl_orderN -?Cinr_orderN; by apply ora_morphism_orderN.
   - intros [a|b|]; rewrite /= -?Increasing_cinl -?Increasing_cinr => ?;
       last apply Increasing_CsumBot; by apply ora_morphism_increasing.
-  - move=> [a|b|]=>//=; rewrite ora_morphism_pcore; by destruct pcore.
-  - intros [xa|ya|] [xb|yb|]=>//=; by rewrite -ora_morphism_op.
 Qed.
 
 Program Definition csumRF (Fa Fb : OrarFunctor) : OrarFunctor := {|
@@ -264,7 +261,7 @@ Next Obligation.
   apply csum_map_ext=>y; apply orarFunctor_map_compose.
 Qed.
 
-Instance csumRF_contractive Fa Fb :
+#[export] Instance csumRF_contractive Fa Fb :
   OrarFunctorContractive Fa → OrarFunctorContractive Fb →
   OrarFunctorContractive (csumRF Fa Fb).
 Proof.

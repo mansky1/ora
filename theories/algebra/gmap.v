@@ -174,7 +174,6 @@ Global Instance gmap_fmap_ora_morphism `{Countable K} {A B : ora} (f : A → B)
   `{!OraMorphism f} : OraMorphism (fmap f : gmap K A → gmap K B).
 Proof.
   split; try apply _.
-  - by intros n m ? i; rewrite lookup_fmap; apply (ora_morphism_validN _).
   - intros ??? Hord ?.
     rewrite !lookup_fmap.
     apply option_fmap_ora_morphism, Hord; auto.
@@ -182,9 +181,6 @@ Proof.
     rewrite lookup_op lookup_fmap.
     apply option_fmap_ora_morphism; auto.
     by apply lookup_increasing.
-  - intros m. apply Some_proper=>i. rewrite lookup_fmap !lookup_omap lookup_fmap.
-    case: (m!!i)=>//= ?. apply ora_morphism_pcore, _.
-  - intros m1 m2 i. by rewrite lookup_op !lookup_fmap lookup_op ora_morphism_op.
 Qed.
 
 Program Definition gmapURF K `{Countable K} (F : OrarFunctor) : uorarFunctor := {|

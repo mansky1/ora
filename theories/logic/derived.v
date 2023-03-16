@@ -1,10 +1,12 @@
-From iris.bi Require Export bi.
+From iris.bi Require Export bi updates.
 From iris_ora.logic Require Export oupred.
-From iris.prelude Require Import options.
 Import bi.bi logic.oupred.ouPred.
+From iris.prelude Require Import options.
 
 (** Derived laws for Iris-specific primitive connectives (own, valid).
     This file does NOT unseal! *)
+
+Infix "~~>" := (cmra_update(A := ora_cmraR _)) (at level 70).
 
 Module ouPred.
 Section derived.
@@ -54,11 +56,11 @@ Proof.
     first by rewrite persistently_elim.
   apply:persistently_ora_valid_1.
 Qed.*)
-(*Lemma bupd_ownM_update x y : x ~~> y → ouPred_ownM x ⊢ |==> ouPred_ownM y.
+Lemma bupd_ownM_update (x y : M) : x ~~> y → ouPred_ownM x ⊢ |==> ouPred_ownM y.
 Proof.
-  intros; rewrite (bupd_ownM_updateP _ (y =.)); last by apply ora_update_updateP.
-  by apply bupd_mono, exist_elim=> y'; apply pure_elim_l=> ->.
-Qed.*)
+  intros; rewrite (bupd_ownM_updateP _ (y =.)); last by apply @cmra_update_updateP.
+  by apply ouPred.bupd_mono, exist_elim=> y'; apply pure_elim_l=> ->.
+Qed.
 
 (** Timeless instances *)
 Global Instance valid_timeless {A : ora} `{!OraDiscrete A} (a : A) :
@@ -93,13 +95,13 @@ Global Instance ouPred_ownM_sep_homomorphism :
 Proof. split; [split|]; try apply _; [apply ownM_op | apply ownM_unit']. Qed.
 
 (** Consistency/soundness statement *)
-(*Lemma bupd_plain_soundness P `{!Plain P} : (⊢ |==> P) → ⊢ P.
+Lemma bupd_plain_soundness P `{!Plain P} : (⊢ |==> P) → ⊢ ■ P.
 Proof.
-  eapply bi_emp_valid_mono. etrans; last exact: bupd_plainly. apply bupd_mono'.
-  apply: plain.
+  eapply bi_emp_valid_mono. etrans; last exact: bupd_plainly.
+  apply bupd_mono, plain, _.
 Qed.
 
-Corollary soundness φ n : (⊢@{ouPredI M} ▷^n ⌜ φ ⌝) → φ.
+(*Corollary soundness φ n : (⊢@{ouPredI M} ▷^n ⌜ φ ⌝) → φ.
 Proof.
   induction n as [|n IH]=> /=.
   - apply pure_soundness.

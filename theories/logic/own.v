@@ -5,8 +5,20 @@ From iris.base_logic Require Import algebra.
 From iris.proofmode Require Import classes.
 From iris_ora.algebra Require Import functions gmap.
 From iris_ora.logic Require Export iprop derived.
-From iris.prelude Require Import options.
 Import bi oupred.ouPred ouPred.
+From iris.bi Require Export updates.
+From iris.prelude Require Import options.
+
+Section ora_transport.
+  Context {A B : ora} (H : A = B).
+  Notation T := (ora_transport H).
+  Lemma ora_transport_updateP (P : A → Prop) (Q : B → Prop) x :
+    x ~~>: P → (∀ y, P y → Q (T y)) → T x ~~>: Q.
+  Proof. destruct H; eauto using cmra_updateP_weaken. Qed.
+  Lemma ora_transport_updateP' (P : A → Prop) x :
+    x ~~>: P → T x ~~>: λ y, ∃ y', y = ora_transport H y' ∧ P y'.
+  Proof. eauto using ora_transport_updateP. Qed.
+End ora_transport.
 
 (** The class [inG Σ A] expresses that the ORA [A] is in the list of functors
 [Σ]. This class is similar to the [subG] class, but written down in terms of
@@ -135,7 +147,7 @@ Local Instance iRes_singleton_core_id γ a :
   OraCoreId a → OraCoreId (iRes_singleton γ a).
 Proof.
   intros. apply discrete_fun_singleton_core_id, gmap_singleton_core_id.
-  by rewrite /OraCoreId ora_morphism_pcore oracore_id.
+  by rewrite /OraCoreId -ora_morphism_pcore oracore_id.
 Qed.
 
 Local Lemma later_internal_eq_iRes_singleton γ a r :
@@ -240,26 +252,26 @@ Qed.*)
 (** ** Allocation *)
 (* TODO: This also holds if we just have ✓ a at the current step-idx, as Iris
    assertion. However, the map_updateP_alloc does not suffice to show this. *)
-(*Lemma own_alloc_strong_dep (f : gname → A) (P : gname → Prop) :
+Lemma own_alloc_strong_dep (f : gname → A) (P : gname → Prop) :
   pred_infinite P →
   (∀ γ, P γ → ✓ (f γ)) →
-  ⊢ |==> ∃ γ, ⌜P γ⌝ ∗ own γ (f γ).
+  ⊢ |==> ∃ γ, ⌜P γ⌝ ∧ own γ (f γ).
 Proof.
   intros HPinf Hf.
-  rewrite -(bupd_mono (∃ m, ⌜∃ γ, P γ ∧ m = iRes_singleton γ (f γ)⌝ ∧ uPred_ownM m)%I).
-  - rewrite /bi_emp_valid (ownM_unit emp).
-    apply bupd_ownM_updateP, (discrete_fun_singleton_updateP_empty _ (λ m, ∃ γ,
-      m = {[ γ := inG_unfold (cmra_transport inG_prf (f γ)) ]} ∧ P γ));
+  rewrite -(bupd_mono (∃ m, ⌜∃ γ, P γ ∧ m = iRes_singleton γ (f γ)⌝ ∧ ouPred_ownM m)%I).
+  - rewrite /bi_emp_valid ownM_unit.
+    apply bupd_ownM_updateP, (discrete_fun_singleton_updateP_empty(B := (λ i : fin (gFunctors_len Σ), gmapUR gname (gFunctors_lookup Σ i (iPrePropO Σ) iPreProp_cofe)))
+      _ (λ m : _, ∃ γ, m = {[ γ := inG_unfold (ora_transport inG_prf (f γ)) ]} ∧ P γ));
       [|naive_solver].
     apply (alloc_updateP_strong_dep _ P _ (λ γ,
-      inG_unfold (cmra_transport inG_prf (f γ)))); [done| |naive_solver].
+      inG_unfold (ora_transport inG_prf (f γ)))); [done| |naive_solver].
     intros γ _ ?.
-    by apply (cmra_morphism_valid inG_unfold), cmra_transport_valid, Hf.
+    by apply (cmra_morphism_valid inG_unfold), ora_transport_valid, Hf.
   - apply exist_elim=>m; apply pure_elim_l=>-[γ [Hfresh ->]].
     by rewrite !own_eq /own_def -(exist_intro γ) pure_True // left_id.
 Qed.
 Lemma own_alloc_cofinite_dep (f : gname → A) (G : gset gname) :
-  (∀ γ, γ ∉ G → ✓ (f γ)) → ⊢ |==> ∃ γ, ⌜γ ∉ G⌝ ∗ own γ (f γ).
+  (∀ γ, γ ∉ G → ✓ (f γ)) → ⊢ |==> ∃ γ, ⌜γ ∉ G⌝ ∧ own γ (f γ).
 Proof.
   intros Ha.
   apply (own_alloc_strong_dep f (λ γ, γ ∉ G))=> //.
@@ -271,50 +283,50 @@ Lemma own_alloc_dep (f : gname → A) :
   (∀ γ, ✓ (f γ)) → ⊢ |==> ∃ γ, own γ (f γ).
 Proof.
   intros Ha. rewrite /bi_emp_valid (own_alloc_cofinite_dep f ∅) //; [].
-  apply bupd_mono, exist_mono=>?. apply: sep_elim_r.
+  apply bupd_mono, exist_mono=>?. apply: and_elim_r.
 Qed.
 
 Lemma own_alloc_strong a (P : gname → Prop) :
   pred_infinite P →
-  ✓ a → ⊢ |==> ∃ γ, ⌜P γ⌝ ∗ own γ a.
+  ✓ a → ⊢ |==> ∃ γ, ⌜P γ⌝ ∧ own γ a.
 Proof. intros HP Ha. eapply (own_alloc_strong_dep (λ _, a)); eauto. Qed.
 Lemma own_alloc_cofinite a (G : gset gname) :
-  ✓ a → ⊢ |==> ∃ γ, ⌜γ ∉ G⌝ ∗ own γ a.
+  ✓ a → ⊢ |==> ∃ γ, ⌜γ ∉ G⌝ ∧ own γ a.
 Proof. intros Ha. eapply (own_alloc_cofinite_dep (λ _, a)); eauto. Qed.
 Lemma own_alloc a : ✓ a → ⊢ |==> ∃ γ, own γ a.
 Proof. intros Ha. eapply (own_alloc_dep (λ _, a)); eauto. Qed.
 
 (** ** Frame preserving updates *)
-Lemma own_updateP P γ a : a ~~>: P → own γ a ==∗ ∃ a', ⌜P a'⌝ ∗ own γ a'.
+Lemma own_updateP P γ a : a ~~>: P → own γ a ==∗ ∃ a', ⌜P a'⌝ ∧ own γ a'.
 Proof.
   intros Hupd. rewrite !own_eq.
   rewrite -(bupd_mono (∃ m,
-    ⌜ ∃ a', m = iRes_singleton γ a' ∧ P a' ⌝ ∧ uPred_ownM m)%I).
-  - apply bupd_ownM_updateP, (discrete_fun_singleton_updateP _ (λ m, ∃ x,
-      m = {[ γ := x ]} ∧ ∃ x',
+    ⌜ ∃ a', m = iRes_singleton γ a' ∧ P a' ⌝ ∧ ouPred_ownM m)%I).
+  - apply bupd_ownM_updateP, (discrete_fun_singleton_updateP(B := (λ i : fin (gFunctors_len Σ), gmapUR gname (gFunctors_lookup Σ i (iPrePropO Σ) iPreProp_cofe)))
+       _ (λ m, ∃ x, m = {[ γ := x ]} ∧ ∃ x',
       x = inG_unfold x' ∧ ∃ a',
-      x' = cmra_transport inG_prf a' ∧ P a')); [|naive_solver].
+      x' = ora_transport inG_prf a' ∧ P a')); [|naive_solver].
     apply singleton_updateP', (iso_cmra_updateP' inG_fold).
     { apply inG_unfold_fold. }
     { apply (cmra_morphism_op _). }
     { apply inG_unfold_validN. }
-    by apply cmra_transport_updateP'.
+    by apply ora_transport_updateP'.
   - apply exist_elim=> m; apply pure_elim_l=> -[a' [-> HP]].
-    rewrite -(exist_intro a'). rewrite -persistent_and_sep.
+    rewrite -(exist_intro a').
     by apply and_intro; [apply pure_intro|].
 Qed.
 
 Lemma own_update γ a a' : a ~~> a' → own γ a ==∗ own γ a'.
 Proof.
   intros; rewrite (own_updateP (a' =.)); last by apply cmra_update_updateP.
-  apply bupd_mono, exist_elim=> a''. rewrite sep_and. apply pure_elim_l=> -> //.
+  apply bupd_mono, exist_elim=> a''. apply pure_elim_l=> -> //.
 Qed.
 Lemma own_update_2 γ a1 a2 a' :
   a1 ⋅ a2 ~~> a' → own γ a1 -∗ own γ a2 ==∗ own γ a'.
 Proof. intros. apply wand_intro_r. rewrite -own_op. by apply own_update. Qed.
 Lemma own_update_3 γ a1 a2 a3 a' :
   a1 ⋅ a2 ⋅ a3 ~~> a' → own γ a1 -∗ own γ a2 -∗ own γ a3 ==∗ own γ a'.
-Proof. intros. do 2 apply wand_intro_r. rewrite -!own_op. by apply own_update. Qed.*)
+Proof. intros. do 2 apply wand_intro_r. rewrite -!own_op. by apply own_update. Qed.
 End global.
 
 Global Arguments own_valid {_ _} [_] _ _.
@@ -322,22 +334,22 @@ Global Arguments own_valid_2 {_ _} [_] _ _ _.
 Global Arguments own_valid_3 {_ _} [_] _ _ _ _.
 Global Arguments own_valid_l {_ _} [_] _ _.
 Global Arguments own_valid_r {_ _} [_] _ _.
-(*Global Arguments own_updateP {_ _} [_] _ _ _ _.
+Global Arguments own_updateP {_ _} [_] _ _ _ _.
 Global Arguments own_update {_ _} [_] _ _ _ _.
 Global Arguments own_update_2 {_ _} [_] _ _ _ _ _.
-Global Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.*)
+Global Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.
 
-(*Lemma own_unit A `{i : !inG Σ (A:uora)} γ : ⊢ |==> own γ (ε:A).
+Lemma own_unit A `{i : !inG Σ (A:uora)} γ : ⊢ |==> own γ (ε:A).
 Proof.
-  rewrite /bi_emp_valid (ownM_unit emp) !own_eq /own_def.
-  apply bupd_ownM_update, discrete_fun_singleton_update_empty.
-  apply (alloc_unit_singleton_update (inG_unfold (cmra_transport inG_prf ε))).
-  - apply (cmra_morphism_valid _), cmra_transport_valid, ucmra_unit_valid.
+  rewrite /bi_emp_valid ownM_unit !own_eq /own_def.
+  apply bupd_ownM_update, (discrete_fun_singleton_update_empty(B := (λ i : fin (gFunctors_len Σ), gmapUR gname (gFunctors_lookup Σ i (iPrePropO Σ) iPreProp_cofe)))).
+  apply (alloc_unit_singleton_update (inG_unfold (ora_transport inG_prf ε))).
+  - apply (cmra_morphism_valid _), ora_transport_valid, ucmra_unit_valid.
   - intros x. rewrite -(inG_unfold_fold x) -(cmra_morphism_op inG_unfold).
     f_equiv. generalize (inG_fold x)=> x'.
     destruct inG_prf=> /=. by rewrite left_id.
   - done.
-Qed.*)
+Qed.
 
 (** Big op class instances *)
 Section big_op_instances.

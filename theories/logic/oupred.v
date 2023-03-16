@@ -190,7 +190,7 @@ Proof.
   destruct n; split; by apply HPQ.
 Qed.
 
-(** logical entailement *)
+(** logical entailment *)
 Inductive ouPred_entails {M} (P Q : ouPred M) : Prop :=
   { ouPred_in_entails : ∀ n x, ✓{n} x → P n x → Q n x }.
 Hint Resolve ouPred_mono : ouPred_def.

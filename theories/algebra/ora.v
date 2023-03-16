@@ -244,18 +244,13 @@ Hint Mode OraDiscrete ! : typeclass_instances.
 
 (** * Morphisms *)
 Class OraMorphism {A B : ora} (f : A → B) := {
-  ora_morphism_ne :> NonExpansive f;
-  ora_morphism_validN n x : ✓{n} x → ✓{n} f x;
+  ora_cmra_morphism :> CmraMorphism f;
   ora_morphism_orderN n x y : x ≼ₒ{n} y  → f x ≼ₒ{n} f y;
   ora_morphism_increasing x : Increasing x → Increasing (f x);
-  ora_morphism_pcore x : pcore (f x) ≡ f <$> pcore x;
-  ora_morphism_op x y : f x ⋅ f y ≡ f (x ⋅ y)
 }.
-Arguments ora_morphism_validN {_ _} _ {_} _ _ _.
+Arguments ora_cmra_morphism {_ _} _ {_}.
 Arguments ora_morphism_orderN {_ _} _ {_} _ _ _.
 Arguments ora_morphism_increasing {_ _} _ _ _.
-Arguments ora_morphism_pcore {_ _} _ {_} _.
-Arguments ora_morphism_op {_ _} _ {_} _ _.
 
 (** * Properties **)
 Section ora.
@@ -801,28 +796,33 @@ End ora_total.
 
 (** * Properties about morphisms *)
 Instance ora_morphism_id {A : ora} : OraMorphism (@id A).
-Proof. split=>//=. apply _. intros. by rewrite option_fmap_id. Qed.
+Proof. split=>//=. apply cmra_morphism_id. Qed.
 Instance ora_morphism_proper {A B : ora} (f : A → B) `{!OraMorphism f} :
   Proper ((≡) ==> (≡)) f := ne_proper _.
 Instance ora_morphism_compose {A B C : ora} (f : A → B) (g : B → C) :
   OraMorphism f → OraMorphism g → OraMorphism (g ∘ f).
 Proof.
   split.
-  - apply _.
-  - move=> n x Hx /=. by apply ora_morphism_validN, ora_morphism_validN.
+  - apply cmra_morphism_compose; apply _.
   - move=> n x Hx Hle /=. by apply ora_morphism_orderN, ora_morphism_orderN.
   - move=> x Hx /=.
     apply ora_morphism_increasing; eauto.
     apply ora_morphism_increasing; eauto.
-  - move=> x /=. by rewrite 2!ora_morphism_pcore option_fmap_compose.
-  - move=> x y /=. by rewrite !ora_morphism_op.
 Qed.
 
 Section ora_morphism.
   Local Set Default Proof Using "Type*".
   Context {A B : ora} (f : A → B) `{!OraMorphism f}.
+
+  Lemma ora_morphism_validN n (x : A) : ✓{n} x → ✓{n} f x.
+  Proof. apply cmra_morphism_validN, _. Qed.
+  Lemma ora_morphism_pcore (x : A) : f <$> pcore x ≡ pcore (f x).
+  Proof. rewrite -cmra_morphism_pcore //. Qed.
+  Lemma ora_morphism_op (x y : A) : f (x ⋅ y) ≡ f x ⋅ f y.
+  Proof. apply cmra_morphism_op, _. Qed.
+
   Lemma ora_morphism_core x : core (f x) ≡ f (core x).
-  Proof. unfold core. rewrite ora_morphism_pcore. by destruct (pcore x). Qed.
+  Proof. unfold core. rewrite -ora_morphism_pcore. by destruct (pcore x). Qed.
   Lemma ora_morphism_monotone x y : x ≼ₒ y → f x ≼ₒ f y.
   Proof.
     intros Hle. apply ora_order_orderN => n. apply ora_morphism_orderN; eauto.
@@ -906,7 +906,7 @@ Program Definition OraconstURF (B : uora) : uorarFunctor :=
 Solve Obligations with done.
 Coercion OraconstURF : uora >-> uorarFunctor.
 
-Instance OraconstURF_contractive B : uorarFunctorContractive (OraconstURF B).
+#[export] Instance OraconstURF_contractive B : uorarFunctorContractive (OraconstURF B).
 Proof. rewrite /uorarFunctorContractive; apply _. Qed.
 
 (** * Transporting a CMRA equality *)
@@ -1291,22 +1291,12 @@ Instance prod_map_cmra_morphism {A A' B B' : ora} (f : A → A') (g : B → B') 
   OraMorphism f → OraMorphism g → OraMorphism (prod_map f g).
 Proof.
   split; first apply _.
-  - by intros n x [??]; split; simpl; apply ora_morphism_validN.
   - intros n x y [??]; split; simpl; apply ora_morphism_orderN; auto.
   - intros x Hx [z1 z2]; split; simpl.
     + eapply ora_morphism_increasing; eauto.
       { intros z. destruct (Hx (z, x.2)); simpl in *; auto. }
     + eapply ora_morphism_increasing; eauto.
       { intros z. destruct (Hx (x.1, z)); simpl in *; auto. }
-  - rewrite /prodR /cmra.prodR /prod_pcore_instance /ora_cmraR /cmra_car /cmra_pcore /=.
-    intros x. etrans. apply (reflexivity (mbind _ _)).
-    etrans; last apply (reflexivity (_ <$> mbind _ _)). simpl.
-    assert (Hf := ora_morphism_pcore f (x.1)).
-    destruct (pcore (f (x.1))), (pcore (x.1)); inversion_clear Hf=>//=.
-    assert (Hg := ora_morphism_pcore g (x.2)).
-    destruct (pcore (g (x.2))), (pcore (x.2)); inversion_clear Hg=>//=.
-    by setoid_subst.
-  - intros. by rewrite /prod_map /= -!ora_morphism_op.
 Qed.
 
 Program Definition prodRF (F1 F2 : OrarFunctor) : OrarFunctor := {|
@@ -1681,7 +1671,6 @@ Instance option_fmap_ora_morphism {A B : ora} (f: A → B) `{!OraMorphism f} :
   OraMorphism (fmap f : option A → option B).
 Proof.
   split; first apply _.
-  - intros n [a|] ?; rewrite /ora_validN //=. by apply (ora_morphism_validN f).
   - intros n [x|] [y|] ?; try done.
     + simpl. apply Some_orderN.
         by apply ora_morphism_orderN.
@@ -1690,8 +1679,6 @@ Proof.
     + intros Ha%Some_increasing. apply (Some_increasing (f a)).
       by apply ora_morphism_increasing.
     + intros ?; apply None_increasing.
-  - move=> [a|] //. by apply Some_proper, ora_morphism_pcore.
-  - move=> [a|] [b|] //=. by rewrite -(ora_morphism_op f).
 Qed.
 
 Program Definition optionRF (F : OrarFunctor) : OrarFunctor := {|
@@ -1850,14 +1837,13 @@ Global Instance discrete_fun_map_ora_morphism
     `{Finite A} {B1 B2 : A → uora} (f : ∀ x, B1 x → B2 x) :
   (∀ x, OraMorphism (f x)) → OraMorphism (discrete_fun_map f).
 Proof.
-  split; first apply _.
-  - intros n g Hg x; rewrite /discrete_fun_map; apply (ora_morphism_validN (f _)), Hg.
+  intros Ho; split.
+  - apply (discrete_fun_map_cmra_morphism f).
+    intros x; apply Ho.
   - intros n g1 g2 Hg x. rewrite /discrete_fun_map. eapply ora_morphism_orderN; eauto.
   - intros g Hg. apply discrete_fun_increasing => x z.
     apply (ora_morphism_increasing (f x)); eauto.
     by apply discrete_fun_increasing.
-  - intros. apply Some_proper=>i. apply (ora_morphism_core (f i)).
-  - intros g1 g2 i. by rewrite /discrete_fun_map discrete_fun_lookup_op ora_morphism_op.
 Qed.
 
 Program Definition discrete_funURF `{Finite C} (F : C → uorarFunctor) : uorarFunctor := {|
