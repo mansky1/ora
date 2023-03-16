@@ -15,3 +15,5 @@ theories/logic/algebra.v
 theories/logic/iprop.v
 theories/logic/derived.v
 theories/logic/own.v
+theories/logic/proofmode.v
+theories/logic/logic.v

@@ -143,6 +143,14 @@ Proof.
 Qed.
 Canonical Structure gmapR : ora := Ora (gmap K A) gmap_ora_mixin.
 
+Global Instance gmap_ora_discrete : OraDiscrete A → OraDiscrete gmapR.
+Proof. split; [apply _|..].
+  - intros m ? i. by apply: ora_discrete_valid.
+  - intros ?? Hord i.
+    specialize (Hord i).
+    by apply (ora_discrete_order(A := optionR A)).
+Qed.
+
 Global Instance gmap_ora_total : OraTotal gmapR.
 Proof. rewrite /OraTotal; eauto. Qed.
 

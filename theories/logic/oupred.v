@@ -734,6 +734,13 @@ Proof. unseal; split=> n x ? ?; done. Qed.
 Lemma ownM_unit_discard : ouPred_ownM (ε:M) ⊢ emp.
 Proof. unseal; split=> n x ? ?; done. Qed.
 
+Lemma ownM_core_discard (a : M) : ouPred_ownM (core a) ⊢ emp.
+Proof. unseal; split=> n x ? ?.
+  unfold ouPred_ownM_def in *; simpl in *.
+  etrans; last done.
+  apply ora_order_orderN, uora_unit_order_core.
+Qed.
+
 Lemma later_ownM (a : M) : ▷ ouPred_ownM a ⊢ ∃ b, ouPred_ownM b ∧ ▷ (a ≡ b).
 Proof.
   rewrite /bi_and /bi_later /bi_exist
