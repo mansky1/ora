@@ -628,8 +628,20 @@ Proof.
   move=> /(_ n' x'); rewrite !left_id=> ?. naive_solver.
 Qed.
 
-#[export] Instance ouPred_pure_forall M : extensions.BiPureForall (ouPredI M).
-Proof. rewrite /extensions.BiPureForall. unseal. done. Qed.
+#[export] Instance ouPred_pure_forall M : BiPureForall (ouPredI M).
+Proof. rewrite /BiPureForall. unseal. done. Qed.
+
+#[export] Instance ouPred_persistently_forall M : BiPersistentlyForall (ouPredI M).
+Proof. rewrite /BiPersistentlyForall. unseal. done. Qed.
+
+#[export] Instance ouPred_persistently_impl_plainly M : BiPersistentlyImplPlainly (ouPredI M).
+Proof.
+  rewrite /BiPersistentlyImplPlainly. unseal.
+  split=> ??? /= H ????? HP.
+  eapply ouPred_mono; eauto.
+  eapply H; eauto.
+  eapply cmra_validN_le; eauto.
+Qed.
 
 Module ouPred.
 Include ouPred_unseal.
