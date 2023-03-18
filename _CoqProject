@@ -6,6 +6,7 @@
 -arg -w -arg -redundant-canonical-projection
 
 theories/algebra/ora.v
+theories/algebra/excl.v
 theories/algebra/osum.v
 theories/algebra/agree.v
 theories/algebra/gmap.v
