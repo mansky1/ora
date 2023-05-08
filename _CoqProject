@@ -11,6 +11,7 @@ theories/algebra/osum.v
 theories/algebra/agree.v
 theories/algebra/gmap.v
 theories/algebra/functions.v
+theories/algebra/dfrac.v
 theories/logic/oupred.v
 theories/logic/algebra.v
 theories/logic/iprop.v

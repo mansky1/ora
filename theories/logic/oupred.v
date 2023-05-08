@@ -83,7 +83,7 @@ Section cofe.
       + by intros P Q HPQ; split=> x i ??; symmetry; apply HPQ.
       + intros P Q Q' HP HQ; split=> i x ??.
         by trans (Q i x);[apply HP|apply HQ].
-    - intros n P Q HPQ; split=> i x ??; apply HPQ; auto.
+    - intros n m P Q HPQ; split=> i x ??; apply HPQ; auto.
   Qed.
   Canonical Structure ouPredO : ofe := Ofe (ouPred M) ouPred_ofe_mixin.
 
@@ -140,7 +140,7 @@ Program Definition ouPred_map {M1 M2 : uora} (f : M2 -n> M1)
   ouPred M2 := {| ouPred_holds n x := P n (f x) |}.
 Next Obligation. naive_solver eauto using ouPred_mono, ora_morphism_monotoneN. Qed.
 
-Instance ouPred_map_ne {M1 M2 : uora} (f : M2 -n> M1)
+Global Instance ouPred_map_ne {M1 M2 : uora} (f : M2 -n> M1)
   `{!OraMorphism f} n : Proper (dist n ==> dist n) (ouPred_map f).
 Proof.
   intros x1 x2 Hx; split=> n' y ??.
@@ -183,17 +183,18 @@ Next Obligation.
   apply ouPred_map_ext=>y; apply uorarFunctor_map_compose.
 Qed.
 
-Instance ouPredOF_contractive F :
+#[export] Instance ouPredOF_contractive F :
   uorarFunctorContractive F → oFunctorContractive (ouPredOF F).
 Proof.
   intros ? A1 ? A2 ? B1 ? B2 ? n P Q HPQ. apply ouPredO_map_ne, uorarFunctor_map_contractive.
-  destruct n; split; by apply HPQ.
+  destruct HPQ as [HPQ]. constructor. intros ??.
+  split; by eapply HPQ.
 Qed.
 
 (** logical entailment *)
 Inductive ouPred_entails {M} (P Q : ouPred M) : Prop :=
   { ouPred_in_entails : ∀ n x, ✓{n} x → P n x → Q n x }.
-Hint Resolve ouPred_mono : ouPred_def.
+#[export] Hint Resolve ouPred_mono : ouPred_def.
 
 (** logical connectives *)
 Program Definition ouPred_pure_def {M} (φ : Prop) : ouPred M :=
@@ -553,7 +554,19 @@ Notation "✓ x" := (ouPred_ora_valid x) (at level 20) : bi_scope.
 Global Instance ouPred_later_contractive M : Contractive (bi_later (PROP:=ouPredI M)).
 Proof.
   unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try lia.
-  apply HPQ, cmra_validN_S; auto.
+  eapply HPQ, cmra_validN_S; auto.
+Qed.
+
+Lemma later_eq_1 M {A : ofe} (x y : A) : ouPred_internal_eq(M := M) (Next x) (Next y) ⊢ ▷ (ouPred_internal_eq x y).
+Proof.
+  unseal. split. intros [|n]; simpl; [done|].
+  intros ?? Heq; apply Heq; auto.
+Qed.
+Lemma later_eq_2 M {A : ofe} (x y : A) : ▷ (ouPred_internal_eq(M := M) x y) ⊢ ouPred_internal_eq (Next x) (Next y).
+Proof.
+  unseal. split. intros n ? ? Hn; split; intros m Hlt; simpl in *.
+  destruct n as [|n]; first lia.
+  eauto using dist_le with si_solver.
 Qed.
 
 Lemma ouPred_bi_internal_eq_mixin M :
@@ -576,9 +589,9 @@ Proof.
   - (* Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝ *)
     intros A a b ?. unseal; split=> n x ?; by apply (discrete_iff n).
   - (* Next x ≡ Next y ⊢ ▷ (x ≡ y) *)
-    by unseal.
+    exact: later_eq_1.
   - (* ▷ (x ≡ y) ⊢ Next x ≡ Next y *)
-    by unseal.
+    exact: later_eq_2.
 Qed.
 Global Instance ouPred_bi_internal_eq M : BiInternalEq (ouPredI M) :=
   {| bi_internal_eq_mixin := ouPred_bi_internal_eq_mixin M |}.
