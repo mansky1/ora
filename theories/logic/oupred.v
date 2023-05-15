@@ -551,10 +551,15 @@ Canonical Structure ouPredI (M : uora) : bi :=
 (* Latest notation *)
 Notation "✓ x" := (ouPred_ora_valid x) (at level 20) : bi_scope.
 
-Global Instance ouPred_later_contractive M : Contractive (bi_later (PROP:=ouPredI M)).
+Global Instance later_contractive M : Contractive (bi_later (PROP:=ouPredI M)).
 Proof.
   unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try lia.
   eapply HPQ, cmra_validN_S; auto.
+Qed.
+
+Global Instance ouPred_later_contractive M : BiLaterContractive (ouPredI M).
+Proof.
+  exact: @later_contractive.
 Qed.
 
 Lemma later_eq_1 M {A : ofe} (x y : A) : ouPred_internal_eq(M := M) (Next x) (Next y) ⊢ ▷ (ouPred_internal_eq x y).
