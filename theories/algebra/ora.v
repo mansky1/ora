@@ -1070,6 +1070,19 @@ Section nat.
 
   Global Instance nat_cancelable (x : nat) : OraCancelable x.
   Proof. by intros ???? ?%Nat.add_cancel_l. Qed.
+
+  Lemma nat_local_update (x y x' y' : nat) :
+    x + y' = x' + y → (x,y) ~l~> (x',y').
+  Proof.
+    intros ??; apply local_update_unital_discrete=> z _.
+    compute -[minus plus]; lia.
+  Qed.
+
+  (* This one has a higher precendence than [is_op_op] so we get a [+] instead
+     of an [⋅]. *)
+  Global Instance nat_is_op (n1 n2 : nat) : IsOp (n1 + n2) n1 n2.
+  Proof. done. Qed.
+
 End nat.
 
 Definition mnat := nat.

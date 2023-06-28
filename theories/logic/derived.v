@@ -121,6 +121,18 @@ Proof.
   apply uora_unit_refl.
 Qed.
 
+Lemma laterN_soundness P n : (⊢ ▷^n P) → ⊢ P.
+Proof.
+  induction n; auto.
+  intros; apply IHn, later_soundness; done.
+Qed.
+
+Lemma bupd_plain P `{!Plain P} `{!Absorbing P} : (|==> P) ⊢ P.
+Proof.
+  rewrite {1}(plain P). setoid_rewrite bupd_plainly.
+  apply plainly_elim, _.
+Qed.
+
 Lemma bupd_plain_soundness P `{!Plain P} : (⊢ |==> P) → ⊢ P.
 Proof.
   split=> n x Hx ?.
@@ -130,6 +142,23 @@ Proof.
   eapply bupd_mono, H; auto.
   etrans; [apply Plain0|].
   by unseal.
+Qed.
+
+Lemma bupdN_plain n P `{!Plain P} `{!Absorbing P} : Nat.iter n (λ Q, |==> ▷ Q)%I P ⊢ |==> ▷^n P.
+Proof.
+  induction n; simpl.
+  - apply bupd_intro.
+  - rewrite IHn.
+    etrans; last apply updates.bupd_trans.
+    apply bupd_mono.
+    rewrite bupd_plain; apply bupd_intro.
+Qed.
+
+Lemma bupd_laterN_soundness P `{!Plain P} `{!Absorbing P} n : (⊢ Nat.iter n (λ Q, |==> ▷ Q) P) → ⊢ P.
+Proof.
+  rewrite bupdN_plain.
+  intros ?%bupd_plain_soundness%laterN_soundness; auto.
+  apply _.
 Qed.
 
 Corollary soundness φ n : (⊢@{ouPredI M} ▷^n ⌜ φ ⌝) → φ.
