@@ -7,7 +7,7 @@ From iris_ora.logic Require Export fancy_updates.
 From iris_ora.logic Require Import wsat.
 
 (** Semantic Invariants *)
-Local Definition inv_def `{!wsatGS Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
+Local Definition inv_def `{!invGS Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
   □ ∀ E, ⌜↑N ⊆ E⌝ → |={E,E ∖ ↑N}=> ▷ P ∗ (▷ P ={E ∖ ↑N,E}=∗ emp).
 Local Definition inv_aux : seal (@inv_def). Proof. by eexists. Qed.
 Definition inv := inv_aux.(unseal).
@@ -17,7 +17,7 @@ Global Instance: Params (@inv) 2 := {}.
 
 (** * Invariants *)
 Section inv.
-  Context `{!wsatGS Σ}.
+  Context `{!invGS Σ}.
   Implicit Types i : positive.
   Implicit Types N : namespace.
   Implicit Types E : coPset.

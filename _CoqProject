@@ -26,4 +26,5 @@ theories/logic/logic.v
 theories/logic/wsat.v
 theories/logic/later_credits.v
 theories/logic/fancy_updates.v
+theories/logic/invariants.v
 theories/logic/weakestpre.v

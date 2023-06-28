@@ -25,7 +25,7 @@ Local Existing Instances invGpreS_wsat invGpreS_lc.
    [invGS_wsat] also needs to be global as the lemmas in [invariants.v] require it. *)
 Global Existing Instances invGS_lc invGS_wsat.
 
-Notation invGS := (invGS_gen HasLc).
+Notation invGS := (invGS_gen HasNoLc).
 
 Definition invΣ : gFunctors :=
   #[wsatΣ; lcΣ].
