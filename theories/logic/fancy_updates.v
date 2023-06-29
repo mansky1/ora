@@ -244,15 +244,24 @@ Qed.
 
 Lemma step_fupdN_plain_forall Eo Ei n {A} (Φ : A → iProp Σ) `{!∀ x, Plain (Φ x)} `{!∀ x, Absorbing (Φ x)} :
       Ei ⊆ Eo →
-      (|={Eo}[Ei]▷=>^n ∀ x, Φ x) ⊢ (∀ x, |={Eo}[Ei]▷=>^n Φ x).
+      (|={Eo}[Ei]▷=>^n ∀ x, Φ x) ⊣⊢ (∀ x, |={Eo}[Ei]▷=>^n Φ x).
 Proof.
-  intros. induction n.
-  - simpl. reflexivity.
-  - simpl. rewrite IHn. iIntros "H".
-    iMod "H". iIntros (x). iModIntro. 
-    rewrite fupd_forall.
-    iApply (bi.later_mono with "H").
-    iIntros "H". iApply "H".
+  intros.
+  iSplit.
+  - iIntros; iApply step_fupdN_mono; last done; eauto.
+  - destruct n; first by eauto.
+    rewrite bi.forall_mono.
+    2: { intros; apply step_fupdN_plain; apply _. }
+    iIntros "H".
+    rewrite fupd_plain_forall_2 /=.
+    iMod "H".
+    rewrite -(Nat.iter_succ n (λ P, |={Eo}[Ei]▷=> P)%I) Nat.iter_succ_r.
+    iApply step_fupdN_intro.
+    iInduction n as [|] "IH"; simpl.
+    + iApply fupd_mask_intro; iIntros "Hclose !>"; iMod "Hclose" as "_".
+      iApply fupd_plain_forall_2; iIntros (x).
+      by iMod ("H" $! x).
+    + iNext; by iApply "IH".
 Qed.
 
 End fupd_plain.
