@@ -300,7 +300,7 @@ Proof.
 Qed.
 
 Lemma step_fupdN_soundness_lc' `{!invGpreS Σ} (P : iProp Σ) `{!Plain P} `{!Absorbing P} n m :
-  (∀ `{Hinv: !invGS_gen hlc Σ}, £ m ={⊤}[∅]▷=∗^n P) →
+  (∀ `{Hinv: !invGS Σ}, £ m ={⊤}[∅]▷=∗^n P) →
   ⊢ P.
 Proof.
   intros Hiter.
