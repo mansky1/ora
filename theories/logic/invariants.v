@@ -5,19 +5,20 @@ From iris_ora.algebra Require Import gmap.
 From iris.proofmode Require Import proofmode.
 From iris_ora.logic Require Export fancy_updates.
 From iris_ora.logic Require Import wsat.
+Import bi.
 
 (** Semantic Invariants *)
-Local Definition inv_def `{!invGS Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
+Local Definition inv_def `{!invGS_gen hlc Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
   □ ∀ E, ⌜↑N ⊆ E⌝ → |={E,E ∖ ↑N}=> ▷ P ∗ (▷ P ={E ∖ ↑N,E}=∗ emp).
 Local Definition inv_aux : seal (@inv_def). Proof. by eexists. Qed.
 Definition inv := inv_aux.(unseal).
-Global Arguments inv {Σ _} N P.
+Global Arguments inv {hlc Σ _} N P.
 Local Definition inv_unseal : @inv = @inv_def := inv_aux.(seal_eq).
-Global Instance: Params (@inv) 2 := {}.
+Global Instance: Params (@inv) 3 := {}.
 
 (** * Invariants *)
 Section inv.
-  Context `{!invGS Σ}.
+  Context `{!invGS_gen hlc Σ}.
   Implicit Types i : positive.
   Implicit Types N : namespace.
   Implicit Types E : coPset.
@@ -153,12 +154,7 @@ Section inv.
 
 (*  Lemma except_0_inv N P : ◇ inv N P ⊢ inv N P.
   Proof.
-    rewrite inv_unseal /inv_def /bi_except_0.
-    iIntros "[? | $]".
-    Search bi_later bi_affinely.
-Search bi_except_0 bi_intuitionistically.
-iIntros "#H !>" (E ?).
-    iMod "H". by iApply "H".
+    rewrite inv_unseal /inv_def. Search bi_except_0 Affine.
   Qed.*)
 
   (** ** Proof mode integration *)
