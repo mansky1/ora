@@ -28,3 +28,4 @@ theories/logic/later_credits.v
 theories/logic/fancy_updates.v
 theories/logic/invariants.v
 theories/logic/weakestpre.v
+theories/logic/ghost_map.v

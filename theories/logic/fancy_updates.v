@@ -185,6 +185,20 @@ Qed.
 Lemma fupd_plain_later E P `{!Plain P} `{!Absorbing P}: (▷ |={E}=> P) ⊢ |={E}=> ▷ ◇ P.
 Proof. by rewrite {1}(plain P) fupd_plainly_later. Qed.
 
+Lemma fupd_plainly_keep_l E R P : (R ={E}=∗ ■ P) ∗ R ⊢ |={E}=> ■ P ∗ R.
+Proof.
+  rewrite ouPred_fupd_unseal /ouPred_fupd_def. iIntros "[H HQ] [Hw HE]".
+  iAssert (◇ ■ P)%I as "#>HP".
+  { iApply bupd_plainly. iMod ("H" with "HQ [$]") as "(_ & _ & #HP)".
+    by iIntros "!> !>". }
+  by iFrame.
+Qed.
+
+Lemma fupd_plain_keep_l E R P `{!Plain P} `{!Absorbing P}: (R ={E}=∗ P) ∗ R ⊢ |={E}=> P ∗ R.
+Proof.
+  rewrite {1}(plain P) fupd_plainly_keep_l plainly_elim //.
+Qed.
+
 Lemma fupd_plainly_forall_2 E {A} (P : A → iProp Σ) `{!∀x, Absorbing (P x)}: (∀x, |={E}=> ■ P x) ={E}=∗ ∀x, P x.
 Proof.
   rewrite ouPred_fupd_unseal /ouPred_fupd_def. iIntros "HP [Hw HE]".
