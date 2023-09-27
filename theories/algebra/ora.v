@@ -2,7 +2,7 @@ From iris.algebra Require Export ofe monoid cmra numbers.
 From stdpp Require Import finite.
 Set Default Proof Using "Type".
 
-Hint Extern 10 => eassumption : typeclass_instances.
+#[export] Hint Extern 10 => eassumption : typeclass_instances.
 
 (* The order of an ordered RA quantifies over [A], not [option A].  This means
    we do not get reflexivity.  However, if we used [option A], the following
@@ -12,15 +12,15 @@ Hint Extern 10 => eassumption : typeclass_instances.
 Class OraOrder A := Oraorder : A → A → Prop.
 Infix "≼ₒ" := Oraorder (at level 70) : stdpp_scope.
 Notation "(≼ₒ)" := Oraorder (only parsing) : stdpp_scope.
-Hint Extern 0 (_ ≼ₒ _) => reflexivity : core.
-Instance: Params (@Oraorder) 2 := {}.
+#[export] Hint Extern 0 (_ ≼ₒ _) => reflexivity : core.
+#[export] Instance: Params (@Oraorder) 2 := {}.
 
 Class OraOrderN A := OraorderN : nat → A → A → Prop.
 Notation "x ≼ₒ{ n } y" := (OraorderN n x y)
   (at level 70, n at next level, format "x  ≼ₒ{ n }  y") : stdpp_scope.
 Notation "(≼ₒ{ n })" := (OraorderN n) (only parsing) : stdpp_scope.
-Instance: Params (@OraorderN) 3 := {}.
-Hint Extern 0 (_ ≼ₒ{_} _) => reflexivity : core.
+#[export] Instance: Params (@OraorderN) 3 := {}.
+#[export] Hint Extern 0 (_ ≼ₒ{_} _) => reflexivity : core.
 
 Class Increasing `{Op A, OraOrder A} (x : A) := increasing : ∀ y, y ≼ₒ x ⋅ y.
 Arguments increasing {_ _ _} _ {_}.
@@ -94,12 +94,12 @@ Arguments ora_ofe_mixin : simpl never.
 Arguments ora_cmra_mixin : simpl never.
 Arguments ora_mixin : simpl never.
 Add Printing Constructor ora.
-Hint Extern 0 (PCore _) => eapply (@ora_pcore _) : typeclass_instances.
-Hint Extern 0 (Op _) => eapply (@ora_op _) : typeclass_instances.
-Hint Extern 0 (Valid _) => eapply (@ora_valid _) : typeclass_instances.
-Hint Extern 0 (ValidN _) => eapply (@ora_validN _) : typeclass_instances.
-Hint Extern 0 (OraOrder _) => eapply (@ora_order _) : typeclass_instances.
-Hint Extern 0 (OraOrderN _) => eapply (@ora_orderN _) : typeclass_instances.
+#[export] Hint Extern 0 (PCore _) => eapply (@ora_pcore _) : typeclass_instances.
+#[export] Hint Extern 0 (Op _) => eapply (@ora_op _) : typeclass_instances.
+#[export] Hint Extern 0 (Valid _) => eapply (@ora_valid _) : typeclass_instances.
+#[export] Hint Extern 0 (ValidN _) => eapply (@ora_validN _) : typeclass_instances.
+#[export] Hint Extern 0 (OraOrder _) => eapply (@ora_order _) : typeclass_instances.
+#[export] Hint Extern 0 (OraOrderN _) => eapply (@ora_orderN _) : typeclass_instances.
 Coercion ora_ofeO (A : ora) : ofe := Ofe A (ora_ofe_mixin A).
 Canonical Structure ora_ofeO.
 Coercion ora_cmraR (A : ora) : cmra := Cmra A (ora_cmra_mixin A).
@@ -154,34 +154,34 @@ Infix "⋅?" := OraopM (at level 50, left associativity) : stdpp_scope.
 (** * CoreId elements *)
 Class OraCoreId {A : ora} (x : A) := oracore_id : pcore x ≡ Some x.
 Arguments oracore_id {_} _ {_}.
-Hint Mode OraCoreId + ! : typeclass_instances.
-Instance: Params (@OraCoreId) 1 := {}.
+#[export] Hint Mode OraCoreId + ! : typeclass_instances.
+#[export] Instance: Params (@OraCoreId) 1 := {}.
 
 (** * Exclusive elements (i.e., elements that cannot have a frame). *)
 Class OraExclusive {A : ora} (x : A) := oraexclusive0_l y : ✓{0} (x ⋅ y) → False.
 Arguments oraexclusive0_l {_} _ {_} _ _.
-Hint Mode OraExclusive + ! : typeclass_instances.
-Instance: Params (@OraExclusive) 1 := {}.
+#[export] Hint Mode OraExclusive + ! : typeclass_instances.
+#[export] Instance: Params (@OraExclusive) 1 := {}.
 
 (** * Cancelable elements. *)
 Class OraCancelable {A : ora} (x : A) :=
   oracancelableN n y z : ✓{n}(x ⋅ y) → x ⋅ y ≡{n}≡ x ⋅ z → y ≡{n}≡ z.
 Arguments oracancelableN {_} _ {_} _ _ _ _.
-Hint Mode OraCancelable + ! : typeclass_instances.
-Instance: Params (@OraCancelable) 1 := {}.
+#[export] Hint Mode OraCancelable + ! : typeclass_instances.
+#[export] Instance: Params (@OraCancelable) 1 := {}.
 
 (** * Identity-free elements. *)
 Class OraIdFree {A : ora} (x : A) :=
   oraid_free0_r y : ✓{0}x → x ⋅ y ≡{0}≡ x → False.
 Arguments oraid_free0_r {_} _ {_} _ _.
-Hint Mode OraIdFree + ! : typeclass_instances.
-Instance: Params (@OraIdFree) 1 := {}.
+#[export] Hint Mode OraIdFree + ! : typeclass_instances.
+#[export] Instance: Params (@OraIdFree) 1 := {}.
 
 (** * CMRAs whose core is total *)
 (** The function [core] may return a dummy when used on CMRAs without total
 core. *)
 Class OraTotal (A : ora) := ora_total (x : A) : is_Some (pcore x).
-Hint Mode OraTotal ! : typeclass_instances.
+#[export] Hint Mode OraTotal ! : typeclass_instances.
 
 Structure uora := Uora' {
   uora_car :> Type;
@@ -216,7 +216,7 @@ Arguments uora_cmra_mixin : simpl never.
 Arguments uora_ora_mixin : simpl never.
 Arguments uora_ucmra_mixin : simpl never.
 Add Printing Constructor uora.
-Hint Extern 0 (Unit _) => eapply (@uora_unit _) : typeclass_instances.
+#[export] Hint Extern 0 (Unit _) => eapply (@uora_unit _) : typeclass_instances.
 Coercion uora_ofeO (A : uora) : ofe := Ofe A (uora_ofe_mixin A).
 Canonical Structure uora_ofeO.
 Coercion uora_oraR (A : uora) : ora :=
@@ -240,7 +240,7 @@ Class OraDiscrete (A : ora) := {
   ora_discrete_valid (x : A) : ✓{0} x → ✓ x;
   ora_discrete_order (x y: A) : x ≼ₒ{0} y → x ≼ₒ y
 }.
-Hint Mode OraDiscrete ! : typeclass_instances.
+#[export] Hint Mode OraDiscrete ! : typeclass_instances.
 
 (** * Morphisms *)
 Class OraMorphism {A B : ora} (f : A → B) := {
@@ -702,7 +702,7 @@ Section uora.
   Global Instance ora_monoid : Monoid (@op A _) := cmra_monoid.
 End uora.
 
-Hint Immediate uora_unit_ora_total : core.
+#[export] Hint Immediate uora_unit_ora_total : core.
 
 (*(** * Properties about CMRAs with Leibniz equality *)
 Section ora_leibniz.
@@ -795,11 +795,11 @@ Section ora_total.
 End ora_total.
 
 (** * Properties about morphisms *)
-Instance ora_morphism_id {A : ora} : OraMorphism (@id A).
+#[export] Instance ora_morphism_id {A : ora} : OraMorphism (@id A).
 Proof. split=>//=. apply cmra_morphism_id. Qed.
-Instance ora_morphism_proper {A B : ora} (f : A → B) `{!OraMorphism f} :
+#[export] Instance ora_morphism_proper {A B : ora} (f : A → B) `{!OraMorphism f} :
   Proper ((≡) ==> (≡)) f := ne_proper _.
-Instance ora_morphism_compose {A B C : ora} (f : A → B) (g : B → C) :
+#[export] Instance ora_morphism_compose {A B C : ora} (f : A → B) (g : B → C) :
   OraMorphism f → OraMorphism g → OraMorphism (g ∘ f).
 Proof.
   split.
@@ -850,8 +850,8 @@ Record OrarFunctor := OraRFunctor {
       (fg : (A2 -n> A1) * (B1 -n> B2)) :
     OraMorphism (orarFunctor_map fg)
 }.
-Existing Instances orarFunctor_map_ne orarFunctor_mor.
-Instance: Params (@orarFunctor_map) 5 := {}.
+#[export] Existing Instances orarFunctor_map_ne orarFunctor_mor.
+#[export] Instance: Params (@orarFunctor_map) 5 := {}.
 
 Declare Scope orarFunctor_scope.
 Delimit Scope orarFunctor_scope with RF.
@@ -869,7 +869,7 @@ Program Definition OraconstRF (B : ora) : OrarFunctor :=
 Solve Obligations with done.
 Coercion OraconstRF : ora >-> OrarFunctor.
 
-Instance OraconstRF_contractive B : OrarFunctorContractive (OraconstRF B).
+#[export] Instance OraconstRF_contractive B : OrarFunctorContractive (OraconstRF B).
 Proof. rewrite /OrarFunctorContractive; apply _. Qed.
 
 Record uorarFunctor := UOraRFunctor {
@@ -887,8 +887,8 @@ Record uorarFunctor := UOraRFunctor {
       (fg : (A2 -n> A1) * (B1 -n> B2)) :
     OraMorphism (uorarFunctor_map fg)
 }.
-Existing Instances uorarFunctor_map_ne uorarFunctor_mor.
-Instance: Params (@uorarFunctor_map) 5 := {}.
+#[export] Existing Instances uorarFunctor_map_ne uorarFunctor_mor.
+#[export] Instance: Params (@uorarFunctor_map) 5 := {}.
 
 Declare Scope uorarFunctor_scope.
 Delimit Scope uorarFunctor_scope with URF.
@@ -1104,7 +1104,7 @@ Section mnat.
       try by eauto with lia.
     - intros x y z. apply Nat.max_assoc.
     - intros x y. apply Nat.max_comm.
-    - intros x. apply Max.max_idempotent.
+    - intros x. apply Nat.max_id.
   Qed.
 
   Lemma mnat_dora_mixin : DORAMixin mnat.
@@ -1300,7 +1300,7 @@ End prod_unit.
 
 Arguments prodUR : clear implicits.
 
-Instance prod_map_cmra_morphism {A A' B B' : ora} (f : A → A') (g : B → B') :
+#[export] Instance prod_map_cmra_morphism {A A' B B' : ora} (f : A → A') (g : B → B') :
   OraMorphism f → OraMorphism g → OraMorphism (prod_map f g).
 Proof.
   split; first apply _.
@@ -1327,7 +1327,7 @@ Next Obligation.
 Qed.
 Notation "F1 * F2" := (prodRF F1%RF F2%RF) : rFunctor_scope.
 
-Instance prodRF_contractive F1 F2 :
+#[export] Instance prodRF_contractive F1 F2 :
   OrarFunctorContractive F1 → OrarFunctorContractive F2 →
   OrarFunctorContractive (prodRF F1 F2). 
 Proof.
@@ -1350,7 +1350,7 @@ Next Obligation.
 Qed.
 Notation "F1 * F2" := (prodURF F1%URF F2%URF) : urFunctor_scope.
 
-Instance prodURF_contractive F1 F2 :
+#[export] Instance prodURF_contractive F1 F2 :
   uorarFunctorContractive F1 → uorarFunctorContractive F2 →
   uorarFunctorContractive (prodURF F1 F2).
 Proof.
@@ -1680,7 +1680,7 @@ Arguments optionUR : clear implicits.
 (*   Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total b1). Qed. *)
 (* End option_prod. *)
 
-Instance option_fmap_ora_morphism {A B : ora} (f: A → B) `{!OraMorphism f} :
+#[export] Instance option_fmap_ora_morphism {A B : ora} (f: A → B) `{!OraMorphism f} :
   OraMorphism (fmap f : option A → option B).
 Proof.
   split; first apply _.
@@ -1710,7 +1710,7 @@ Next Obligation.
   apply option_fmap_equiv_ext=>y; apply orarFunctor_map_compose.
 Qed.
 
-Instance optionRF_contractive F :
+#[export] Instance optionRF_contractive F :
   OrarFunctorContractive F → OrarFunctorContractive (optionRF F).
 Proof.
   by intros ? A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply optionO_map_ne, orarFunctor_map_contractive.
@@ -1732,7 +1732,7 @@ Next Obligation.
   apply option_fmap_equiv_ext=>y; apply orarFunctor_map_compose.
 Qed.
 
-Instance optionURF_contractive F :
+#[export] Instance optionURF_contractive F :
   OrarFunctorContractive F → uorarFunctorContractive (optionURF F).
 Proof.
   by intros ? A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply optionO_map_ne, orarFunctor_map_contractive.

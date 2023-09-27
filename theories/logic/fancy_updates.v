@@ -199,7 +199,7 @@ Proof.
   rewrite {1}(plain P) fupd_plainly_keep_l plainly_elim //.
 Qed.
 
-Lemma fupd_plainly_forall_2 E {A} (P : A → iProp Σ) `{!∀x, Absorbing (P x)}: (∀x, |={E}=> ■ P x) ={E}=∗ ∀x, P x.
+Lemma fupd_plainly_forall_2 E {A} (P : A → iProp Σ) `{!∀x, Absorbing (P x)}: (∀x, |={E}=> ■ P x) ⊢ |={E}=> ∀x, P x.
 Proof.
   rewrite ouPred_fupd_unseal /ouPred_fupd_def. iIntros "HP [Hw HE]".
   iAssert (◇ ■ ∀ x : A, P x)%I as "#>HP'".
@@ -208,7 +208,7 @@ Proof.
   by iFrame.
 Qed.
 
-Lemma fupd_plain_forall_2 E {A} (P : A → iProp Σ) `{!∀x, Plain (P x)} `{!∀x, Absorbing (P x)}: (∀x, |={E}=> P x) ={E}=∗ ∀x, P x.
+Lemma fupd_plain_forall_2 E {A} (P : A → iProp Σ) `{!∀x, Plain (P x)} `{!∀x, Absorbing (P x)}: (∀x, |={E}=> P x) ⊢ |={E}=> ∀x, P x.
 Proof. rewrite -fupd_plainly_forall_2. apply bi.forall_mono; intros x; rewrite {1}(plain (P x)) //. Qed.
 
 Lemma fupd_plain_forall E1 E2 {A} (Φ :  A → iProp Σ) `{!∀ x, Plain (Φ x)} `{!∀ x, Absorbing (Φ x)} :

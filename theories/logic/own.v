@@ -204,9 +204,9 @@ Proof. intros a1 a2. apply own_mono. Qed.
 Lemma own_valid γ a : own γ a ⊢ ✓ a.
 Proof. by rewrite !own_eq /own_def ownM_valid iRes_singleton_validI. Qed.
 Lemma own_valid_2 γ a1 a2 : own γ a1 -∗ own γ a2 -∗ ✓ (a1 ⋅ a2).
-Proof. apply wand_intro_r. by rewrite -own_op own_valid. Qed.
+Proof. apply entails_wand', wand_intro_r. by rewrite -own_op own_valid. Qed.
 Lemma own_valid_3 γ a1 a2 a3 : own γ a1 -∗ own γ a2 -∗ own γ a3 -∗ ✓ (a1 ⋅ a2 ⋅ a3).
-Proof. do 2 apply wand_intro_r. by rewrite -!own_op own_valid. Qed.
+Proof. apply entails_wand'. do 2 apply wand_intro_r. by rewrite -!own_op own_valid. Qed.
 Lemma own_valid_r γ a : own γ a ⊢ own γ a ∗ ✓ a.
 Proof. apply: bi.persistent_entails_r. apply own_valid. Qed.
 Lemma own_valid_l γ a : own γ a ⊢ ✓ a ∗ own γ a.
@@ -297,7 +297,7 @@ Lemma own_alloc a : ✓ a → ⊢ |==> ∃ γ, own γ a.
 Proof. intros Ha. eapply (own_alloc_dep (λ _, a)); eauto. Qed.
 
 (** ** Frame preserving updates *)
-Lemma own_updateP P γ a : a ~~>: P → own γ a ==∗ ∃ a', ⌜P a'⌝ ∧ own γ a'.
+Lemma own_updateP P γ a : a ~~>: P → own γ a ⊢ |==> ∃ a', ⌜P a'⌝ ∧ own γ a'.
 Proof.
   intros Hupd. rewrite !own_eq.
   rewrite -(bupd_mono (∃ m,
@@ -316,17 +316,17 @@ Proof.
     by apply and_intro; [apply pure_intro|].
 Qed.
 
-Lemma own_update γ a a' : a ~~> a' → own γ a ==∗ own γ a'.
+Lemma own_update γ a a' : a ~~> a' → own γ a ⊢ |==> own γ a'.
 Proof.
   intros; rewrite (own_updateP (a' =.)); last by apply cmra_update_updateP.
   apply bupd_mono, exist_elim=> a''. apply pure_elim_l=> -> //.
 Qed.
 Lemma own_update_2 γ a1 a2 a' :
   a1 ⋅ a2 ~~> a' → own γ a1 -∗ own γ a2 ==∗ own γ a'.
-Proof. intros. apply wand_intro_r. rewrite -own_op. by apply own_update. Qed.
+Proof. intros. apply entails_wand, wand_intro_r. rewrite -own_op. by apply own_update. Qed.
 Lemma own_update_3 γ a1 a2 a3 a' :
   a1 ⋅ a2 ⋅ a3 ~~> a' → own γ a1 -∗ own γ a2 -∗ own γ a3 ==∗ own γ a'.
-Proof. intros. do 2 apply wand_intro_r. rewrite -!own_op. by apply own_update. Qed.
+Proof. intros. apply entails_wand; do 2 apply wand_intro_r. rewrite -!own_op. by apply own_update. Qed.
 End global.
 
 Global Arguments own_valid {_ _} [_] _ _.

@@ -58,7 +58,7 @@ Record ouPred (M : uora) : Type := IProp {
 }.
 Arguments ouPred_holds {_} _ _ _ : simpl never.
 Add Printing Constructor ouPred.
-Instance: Params (@ouPred_holds) 3 := {}.
+#[export] Instance: Params (@ouPred_holds) 3 := {}.
 
 Bind Scope bi_scope with ouPred.
 Arguments ouPred_holds {_} _%I _ _.
@@ -103,11 +103,11 @@ Section cofe.
 End cofe.
 Arguments ouPredO : clear implicits.
 
-Instance ouPred_ne {M} (P : ouPred M) n : Proper (dist n ==> iff) (P n).
+#[export] Instance ouPred_ne {M} (P : ouPred M) n : Proper (dist n ==> iff) (P n).
 Proof.
   intros x1 x2 Hx; split=> ?; eapply ouPred_mono; eauto; by rewrite Hx.
 Qed.
-Instance ouPred_proper {M} (P : ouPred M) n : Proper ((≡) ==> iff) (P n).
+#[export] Instance ouPred_proper {M} (P : ouPred M) n : Proper ((≡) ==> iff) (P n).
 Proof. by intros x1 x2 Hx; apply ouPred_ne, equiv_dist. Qed.
 
 Lemma ouPred_holds_ne {M} (P Q : ouPred M) n1 n2 x :
