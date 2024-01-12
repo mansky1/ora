@@ -20,6 +20,6 @@ Proof.
   - inversion 1.
 Qed.
 
-Canonical Structure exclR := Ora (excl A) excl_ora_mixin.
-
 End excl.
+
+Canonical Structure exclR (A : ofe) := Ora (excl A) (@excl_ora_mixin A).

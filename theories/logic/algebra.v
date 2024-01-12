@@ -1,6 +1,6 @@
 From iris.algebra Require Import cmra view auth agree csum list excl gmap.
 From iris.algebra.lib Require Import excl_auth gmap_view dfrac_agree.
-From iris_ora.algebra Require Import ora osum gmap agree view auth gmap_view.
+From iris_ora.algebra Require Import ora osum gmap agree view auth excl_auth gmap_view.
 From iris_ora.logic Require Import oupred.
 From iris.prelude Require Import options.
 Import ouPred.
@@ -52,7 +52,7 @@ Section list_ofe.
   Proof. ouPred.unseal; constructor=> n x ?. apply list_dist_lookup. Qed.
 End list_ofe.
 
-(*Section excl.
+Section excl.
   Context {A : ofe}.
   Implicit Types a b : A.
   Implicit Types x y : excl A.
@@ -71,7 +71,7 @@ End list_ofe.
   Lemma excl_validI x :
     ✓ x ⊣⊢ if x is ExclBot then False else True.
   Proof. ouPred.unseal. by destruct x. Qed.
-End excl.*)
+End excl.
 
 Section agree.
   Context {A : ofe}.
@@ -268,11 +268,11 @@ Section auth.
 
 End auth.
 
-(*Section excl_auth.
+Section excl_auth.
   Context {A : ofe}.
   Implicit Types a b : A.
 
-  Lemma excl_auth_agreeI a b : ✓ (●E a ⋅ ◯E b) ⊢ (a ≡ b).
+  Lemma excl_auth_agreeI a b : ✓ (●E a ⋅ ◯E b : excl_authR A) ⊢ (a ≡ b).
   Proof.
     rewrite auth_both_validI bi.and_elim_l.
     apply bi.exist_elim=> -[[c|]|];
@@ -280,7 +280,7 @@ End auth.
   Qed.
 End excl_auth.
 
-Section dfrac_agree.
+(*Section dfrac_agree.
   Context {A : ofe}.
   Implicit Types a b : A.
 
