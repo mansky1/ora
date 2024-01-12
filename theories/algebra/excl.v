@@ -23,3 +23,9 @@ Qed.
 End excl.
 
 Canonical Structure exclR (A : ofe) := Ora (excl A) (@excl_ora_mixin A).
+
+#[export] Instance excl_ora_discrete A : OfeDiscrete A → OraDiscrete (exclR A).
+Proof.
+  intros (? & ?)%excl_cmra_discrete.
+  constructor; done.
+Qed.
