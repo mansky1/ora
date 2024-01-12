@@ -374,7 +374,7 @@ Qed.*)
 
 (** ** CoreId elements *)
 Lemma oracore_id_dup x `{!OraCoreId x} : x ≡ x ⋅ x.
-Proof. by apply cmra_pcore_dup' with x. Qed.
+Proof. by apply @cmra_pcore_dup' with x. Qed.
 
 (** ** Exclusive elements *)
 Lemma OraexclusiveN_l n x `{!OraExclusive x} y : ✓{n} (x ⋅ y) → False.
@@ -650,7 +650,7 @@ Section uora.
   Implicit Types x y z : A.
 
   Lemma uora_unit_validN n : ✓{n} (ε:A).
-  Proof. apply cmra_valid_validN, ucmra_unit_valid. Qed.
+  Proof. apply (@cmra_valid_validN (ora_cmraR _)), ucmra_unit_valid. Qed.
   Global Instance uora_unit_right_id : RightId (≡) ε (@op A _).
   Proof. apply ucmra_unit_right_id. Qed.
   Global Instance uora_unit_core_id : OraCoreId (ε:A).
@@ -819,7 +819,7 @@ Section ora_morphism.
   Lemma ora_morphism_pcore (x : A) : f <$> pcore x ≡ pcore (f x).
   Proof. rewrite -cmra_morphism_pcore //. Qed.
   Lemma ora_morphism_op (x y : A) : f (x ⋅ y) ≡ f x ⋅ f y.
-  Proof. apply cmra_morphism_op, _. Qed.
+  Proof. apply @cmra_morphism_op, _. Qed.
 
   Lemma ora_morphism_core x : core (f x) ≡ f (core x).
   Proof. unfold core. rewrite -ora_morphism_pcore. by destruct (pcore x). Qed.

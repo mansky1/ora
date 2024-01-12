@@ -134,3 +134,51 @@ Local Canonical Structure flatUR : uora := Uora A (ucmra_mixin A).
 End flat.
 
 (*#[global] Notation flatR A := (Uora A (ucmra_mixin A)).*)
+
+Section positive.
+
+Context {A : cmra} (positive : forall (a : A), ~a ≡ a ⋅ a).
+
+Lemma coreless : forall (a : A), pcore a = None.
+Proof.
+  intros; destruct (pcore a) eqn: Hcore; last done.
+  contradiction (positive c).
+  by eapply cmra_pcore_dup.
+Qed.
+
+Instance positive_orderN : OraOrderN A := dist.
+Instance positive_order : OraOrder A := equiv.
+
+Lemma not_Increasing : forall (a : A), ~Increasing a.
+Proof.
+  intros ? H; eapply positive, H.
+Qed.
+
+Definition positive_ora_mixin : OraMixin A.
+Proof.
+  constructor; try apply _; try done.
+  - intros ?; rewrite coreless //.
+  - by intros ????%not_Increasing.
+  - intros ????; rewrite coreless //.
+  - intros ?????.
+    rewrite /OraorderN /positive_orderN =>Hdist.
+    symmetry in Hdist; apply cmra_extend in Hdist as (z & ? & Heq1 & Hz & ?); last done.
+    eexists _, _; split; last done.
+    by rewrite Heq1.
+  - eauto.
+  - apply dist_S.
+  - by intros ???? ->.
+  - by intros ???? ->.
+  - apply equiv_dist.
+  - intros ???; rewrite coreless.
+    inversion 1.
+Qed.
+
+Local Canonical Structure positiveR : ora := Ora A positive_ora_mixin.
+
+#[export] Instance positive_discrete `{CmraDiscrete A} : OraDiscrete positiveR.
+Proof.
+  destruct H; constructor; done.
+Qed.
+
+End positive.
