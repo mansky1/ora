@@ -16,6 +16,7 @@ theories/algebra/ext_order.v
 theories/algebra/view.v
 theories/algebra/auth.v
 theories/algebra/excl_auth.v
+theories/algebra/frac_auth.v
 theories/algebra/gmap_view.v
 theories/logic/oupred.v
 theories/logic/algebra.v
