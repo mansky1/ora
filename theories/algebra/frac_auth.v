@@ -30,3 +30,13 @@ Definition frac_authR := authR _ auth_frac_rel_order.
 Definition frac_authUR := authUR _ auth_frac_rel_order.
 
 End frac_auth.
+
+Notation "●F a" := (@frac_auth_auth (ora_cmraR _) a) (at level 10).
+Notation "◯F{ q } a" := (@frac_auth_frag (ora_cmraR _) q a) (at level 10, format "◯F{ q }  a").
+Notation "◯F a" := (@frac_auth_frag (ora_cmraR _) 1 a) (at level 10).
+
+Lemma frac_auth_frag_op : forall {A : ora} (q1 q2 : Qp) (a1 a2 : A),
+  ◯F{q1 + q2} (a1 ⋅ a2) ≡ ◯F{q1} a1 ⋅ ◯F{q2} a2.
+Proof.
+  intros; apply frac_auth_frag_op.
+Qed.
