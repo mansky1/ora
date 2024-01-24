@@ -288,6 +288,24 @@ Section frac_auth.
   Local Canonical Structure frac_authR := (frac_authR order).
   Local Canonical Structure frac_authUR := (frac_authUR order).
 
+  Lemma frac_auth_auth_validI a : ✓ (●F a : frac_authR) ⊣⊢ ✓ a.
+  Proof.
+    rewrite /frac_auth_auth auth_auth_validI option_validI prod_validI /=.
+    unshelve erewrite (@discrete_valid) by (apply ext_order.positive_discrete, _).
+    rewrite bi.pure_True // bi.True_and //.
+  Qed.
+
+  Lemma frac_auth_frag_validI q a : ✓ (◯F{q} a : frac_authR) ⊣⊢ ⌜✓ q⌝ ∧ ✓ a.
+  Proof.
+    rewrite /frac_auth_frag auth_frag_validI option_validI prod_validI /=.
+    unshelve erewrite (@discrete_valid) by (apply ext_order.positive_discrete, _); done.
+  Qed.
+
+  Lemma frac_auth_frag_full_validI a : ✓ (◯F a : frac_authR) ⊣⊢ ✓ a.
+  Proof.
+    rewrite frac_auth_frag_validI bi.pure_True // bi.True_and //.
+  Qed.
+
   Lemma frac_auth_agreeI q a b : ✓ (●F a ⋅ ◯F{q} b : frac_authR) ⊢ (if decide (q = 1%Qp) then a ≡ b else ∃ c, a ≡ b ⋅ c)%I ∧ ✓ a.
   Proof.
     rewrite /frac_auth_auth /frac_auth_frag auth_both_validI.
