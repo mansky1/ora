@@ -1,6 +1,6 @@
 From iris.algebra Require Import cmra view auth agree csum list excl gmap.
-From iris.algebra.lib Require Import excl_auth gmap_view dfrac_agree.
-From iris_ora.algebra Require Import ora osum gmap agree view auth excl_auth gmap_view.
+From iris.algebra.lib Require Import excl_auth frac_auth gmap_view dfrac_agree.
+From iris_ora.algebra Require Import ora osum gmap agree view auth excl_auth frac_auth gmap_view.
 From iris_ora.logic Require Import oupred.
 From iris.prelude Require Import options.
 Import ouPred.
@@ -279,6 +279,40 @@ Section excl_auth.
       by rewrite option_equivI /= excl_equivI //= bi.False_elim.
   Qed.
 End excl_auth.
+
+Section frac_auth.
+  Context {A : ora}.
+
+  Context (order : ∀n (x y : A), ✓{n} y → x ≼ₒ{n} y → x ≡{n}≡ y).
+
+  Local Canonical Structure frac_authR := (frac_authR order).
+  Local Canonical Structure frac_authUR := (frac_authUR order).
+
+  Lemma frac_auth_agreeI q a b : ✓ (●F a ⋅ ◯F{q} b : frac_authR) ⊢ (if decide (q = 1%Qp) then a ≡ b else ∃ c, a ≡ b ⋅ c)%I ∧ ✓ a.
+  Proof.
+    rewrite /frac_auth_auth /frac_auth_frag auth_both_validI.
+    apply bi.and_mono.
+    - apply bi.exist_elim=> c; rewrite option_equivI /=.
+      rewrite cmra.Some_op_opM.
+      destruct (opM (q, b) c) as (q', c') eqn: Hc; rewrite Hc prod_equivI /= discrete_eq_1.
+      apply bi.pure_elim_l; intros Hq; hnf in Hq; subst.
+      destruct c as [(?,?)|]; simpl in Hc.
+      + injection Hc as Hq <-.
+        destruct (decide (q = 1%Qp)).
+        { by subst; apply Qp.add_id_free in Hq. }
+        rewrite -bi.exist_intro //.
+      + injection Hc as -> <-.
+        by destruct (decide _).
+    - rewrite option_validI prod_validI /=.
+      apply bi.and_elim_r.
+  Qed.
+
+  Lemma frac_auth_agree_fullI a b : ✓ (●F a ⋅ ◯F b : frac_authR) ⊢ (a ≡ b) ∧ ✓ a.
+  Proof.
+    rewrite frac_auth_agreeI //.
+  Qed.
+
+End frac_auth.
 
 (*Section dfrac_agree.
   Context {A : ofe}.
