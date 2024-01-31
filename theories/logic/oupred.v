@@ -376,7 +376,8 @@ Lemma ouPred_bi_mixin (M : uora) :
   BiMixin
     ouPred_entails ouPred_emp ouPred_pure ouPred_and ouPred_or ouPred_impl
     (@ouPred_forall M) (@ouPred_exist M) ouPred_sep ouPred_wand
-    ouPred_persistently.
+    (* ouPred_persistently *)
+    .
 Proof.
   split.
   - (* PreOrder ouPred_entails *)
@@ -407,20 +408,16 @@ Proof.
     intros n P P' HP Q Q' HQ; split=> n' x ??.
     unseal; split; intros (x1&x2&?&?&?); ofe_subst;
       exists x1, x2; split_and!; try (apply HP || apply HQ); eauto.
-    + eapply cmra_validN_op_l, ora_validN_orderN; eauto.
-    + eapply cmra_validN_op_r, ora_validN_orderN; eauto.
-    + eapply cmra_validN_op_l, ora_validN_orderN; eauto.
-    + eapply cmra_validN_op_r, ora_validN_orderN; eauto.
+    + eapply (@cmra_validN_op_l M), ora_validN_orderN; eauto.
+    + eapply (@cmra_validN_op_r M), ora_validN_orderN; eauto.
+    + eapply (@cmra_validN_op_l M), ora_validN_orderN; eauto.
+    + eapply (@cmra_validN_op_r M), ora_validN_orderN; eauto.
   - (* NonExpansive2 ouPred_wand *)
     intros n P P' HP Q Q' HQ; split=> n' x ??.
     unseal; split; intros HPQ x' n'' ???;
       apply HQ, HPQ, HP; eauto.
-    + eapply cmra_validN_op_r; eauto.
-    + eapply cmra_validN_op_r; eauto.
-  - (* NonExpansive ouPred_persistently *)
-    intros n P1 P2 HP.
-    unseal; split=> n' x; split; apply HP;
-      try apply @ora_core_validN; auto; try apply _.
+    + eapply (@cmra_validN_op_r M); eauto.
+    + eapply (@cmra_validN_op_r M); eauto.
   - (* φ → P ⊢ ⌜φ⌝ *)
     intros P φ ?. unseal; by split.
   - (* (φ → True ⊢ P) → ⌜φ⌝ ⊢ P *)
@@ -454,9 +451,9 @@ Proof.
     intros P P' Q Q' HQ HQ'; unseal.
     split; intros n' x ? (x1&x2&?&?&?); exists x1,x2; ofe_subst x; repeat split; eauto.
     + apply HQ; auto.
-      eapply cmra_validN_op_l, ora_validN_orderN; eauto.
+      eapply (@cmra_validN_op_l M), ora_validN_orderN; eauto.
     + apply HQ'; auto.
-      eapply cmra_validN_op_r, ora_validN_orderN; eauto.
+      eapply (@cmra_validN_op_r M), ora_validN_orderN; eauto.
   - (* P ⊢ emp ∗ P *)
     intros P. rewrite /ouPred_emp. unseal; split=> n x ?? /=.
     exists (core x), x. rewrite ora_core_l; repeat split; auto.
@@ -483,7 +480,18 @@ Proof.
     apply HPQR in HP.
     apply HP in HQ; eauto using ora_validN_orderN.
     eauto using ouPred_mono.
-    { eapply cmra_validN_op_l, ora_validN_orderN; eauto. }
+    { eapply (@cmra_validN_op_l M), ora_validN_orderN; eauto. }
+Qed.
+
+Lemma ouPred_bi_persistently_mixin (M : uora) :
+  BiPersistentlyMixin ouPred_entails ouPred_emp ouPred_and
+  (@ouPred_exist M) ouPred_sep ouPred_persistently.
+Proof.
+split.
+  - (* NonExpansive ouPred_persistently *)
+    intros n P1 P2 HP.
+    unseal; split=> n' x; split; apply HP;
+    try apply @ora_core_validN; auto; try apply _.
   - (* (P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q *)
     intros P QR HP. unseal; split=> n x ? /=. by apply HP, ora_core_validN.
   - (* bi_persistently P ⊢ bi_persistently (bi_persistently P) *)
@@ -513,10 +521,10 @@ Proof.
   split.
   - (* NonExpansive bi_later *)
     unseal; intros n P Q HPQ; split=> -[|n'] x ?? //=; try lia.
-    apply HPQ, cmra_validN_S; auto.
+    apply HPQ, (cmra_validN_S(A:=M)); auto.
   - (* (P ⊢ Q) → ▷ P ⊢ ▷ Q *)
     intros P Q.
-    unseal=> HP; split=>-[|n] x ??; [done|by apply HP; [apply cmra_validN_S|]].
+    unseal=> HP; split=>-[|n] x ??; [done|by apply HP; [apply (cmra_validN_S(A:=M))|]].
   - (* P ⊢ ▷ P *)
     intros P. unseal; split=> -[|n] /= x ? HP; first done.
     apply ouPred_mono with (S n) x; eauto.
@@ -546,6 +554,7 @@ Qed.
 
 Canonical Structure ouPredI (M : uora) : bi :=
   {| bi_ofe_mixin := ofe_mixin_of (ouPred M); bi_bi_mixin := ouPred_bi_mixin M;
+     bi_bi_persistently_mixin := ouPred_bi_persistently_mixin M;
      bi_bi_later_mixin := ouPred_bi_later_mixin M |}.
 
 (* Latest notation *)
@@ -554,7 +563,7 @@ Notation "✓ x" := (ouPred_ora_valid x) (at level 20) : bi_scope.
 Global Instance later_contractive M : Contractive (bi_later (PROP:=ouPredI M)).
 Proof.
   unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try lia.
-  eapply HPQ, cmra_validN_S; auto.
+  eapply HPQ, (cmra_validN_S(A:=M)); auto.
 Qed.
 
 Global Instance ouPred_later_contractive M : BiLaterContractive (ouPredI M).
@@ -620,7 +629,7 @@ Proof.
     unseal; split=> /= n x ? HPQ n' x' ????.
     eapply ouPred_mono with n' ε=>//.
     apply (HPQ n' x); eauto.
-    eapply cmra_validN_le; eauto.
+    eapply (cmra_validN_le(A:=M)); eauto.
   - (* P ⊢ ■ emp (ADMISSIBLE) *)
     unseal; split => ???? /=; auto.
   - (* ■ P ∗ Q ⊢ ■ P *)
@@ -658,7 +667,7 @@ Proof.
   split=> ??? /= H ????? HP.
   eapply ouPred_mono; eauto.
   eapply H; eauto.
-  eapply cmra_validN_le; eauto.
+  eapply (cmra_validN_le(A:=M)); eauto.
 Qed.
 
 Module ouPred.
@@ -692,7 +701,7 @@ Proof.
   intros n P Q HPQ.
   unseal; split=> n' x; split; intros HP k yf ??;
     destruct (HP k yf) as (x'&?&?); auto;
-    exists x'; split; auto; apply HPQ; eauto; eapply cmra_validN_op_l; eauto.
+    exists x'; split; auto; apply HPQ; eauto; eapply (cmra_validN_op_l(A:=M)); eauto.
 Qed.
 
 (** BI instances *)
@@ -717,14 +726,14 @@ Notation "|==> P" := (ouPred_bupd P) : bi_scope.
 Lemma bupd_intro P : P ⊢ |==> P.
 Proof.
   unseal. split=> n x ? HP k yf ?; exists x; split; first done.
-  apply ouPred_mono with n x; eauto using cmra_validN_op_l.
+  apply ouPred_mono with n x; eauto using (cmra_validN_op_l(A:=M)).
 Qed.
 Lemma bupd_mono P Q : (P ⊢ Q) → (|==> P) ⊢ |==> Q.
 Proof.
   unseal. intros HPQ; split=> n x ? HP k yf ??.
   destruct (HP k yf) as (x'&?&?); eauto.
   exists x'; split; eauto.
-  eapply ouPred_in_entails; eauto. eapply cmra_validN_op_l; eauto.
+  eapply ouPred_in_entails; eauto. eapply (cmra_validN_op_l(A:=M)); eauto.
 Qed.
 Lemma bupd_trans P : (|==> |==> P) ⊢ |==> P.
 Proof. unseal; split; naive_solver. Qed.
@@ -735,7 +744,7 @@ Proof.
   destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
   { by rewrite assoc. }
   exists (x' ⋅ x2); split; first by rewrite -assoc.
-  exists x', x2. eauto using ouPred_mono, cmra_validN_op_l, cmra_validN_op_r.
+  exists x', x2. eauto using ouPred_mono, (cmra_validN_op_l(A:=M)), cmra_validN_op_r.
 Qed.
 Lemma bupd_plainly P : (|==> ■ P) ⊢ ■ P.
 Proof.
