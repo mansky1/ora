@@ -2,8 +2,6 @@ From iris.algebra Require Export ofe monoid cmra numbers.
 From stdpp Require Import finite.
 Set Default Proof Using "Type".
 
-#[export] Hint Extern 10 => eassumption : typeclass_instances.
-
 (* The order of an ordered RA quantifies over [A], not [option A].  This means
    we do not get reflexivity.  However, if we used [option A], the following
    would no longer hold:
@@ -236,7 +234,7 @@ End uora_mixin.
 
 (** * Discrete CMRAs *)
 Class OraDiscrete (A : ora) := {
-  ora_discrete_ofe_discrete :> OfeDiscrete A;
+  ora_discrete_ofe_discrete :: OfeDiscrete A;
   ora_discrete_valid (x : A) : ✓{0} x → ✓ x;
   ora_discrete_order (x y: A) : x ≼ₒ{0} y → x ≼ₒ y
 }.
@@ -244,7 +242,7 @@ Class OraDiscrete (A : ora) := {
 
 (** * Morphisms *)
 Class OraMorphism {A B : ora} (f : A → B) := {
-  ora_cmra_morphism :> CmraMorphism f;
+  ora_cmra_morphism :: CmraMorphism f;
   ora_morphism_orderN n x y : x ≼ₒ{n} y  → f x ≼ₒ{n} f y;
   ora_morphism_increasing x : Increasing x → Increasing (f x);
 }.
@@ -671,7 +669,8 @@ Section uora.
 
   Lemma uora_unit_order_pcore x y : pcore x = Some y → ε ≼ₒ y.
   Proof.
-    intros; eapply (@uora_unit_order_increasing _ _).
+    intros; apply uora_unit_order_increasing.
+    by eapply ora_pcore_increasing.
   Qed.
 
   Global Instance uora_unit_ora_total : OraTotal A.
@@ -685,7 +684,8 @@ Section uora.
   Lemma uora_unit_order_core x : ε ≼ₒ core x.
   Proof.
     destruct (ora_total x) as [z Heq]; rewrite /core Heq /=.
-    apply (@uora_unit_order_increasing _ _).
+    apply uora_unit_order_increasing.
+    by eapply ora_pcore_increasing.
   Qed.
 
   Lemma uora_core_order_op x y : core x ≼ₒ core (x ⋅ y).
@@ -858,7 +858,7 @@ Delimit Scope orarFunctor_scope with RF.
 Bind Scope orarFunctor_scope with rFunctor.
 
 Class OrarFunctorContractive (F : OrarFunctor) :=
-  orarFunctor_map_contractive `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} :>
+  orarFunctor_map_contractive `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} ::
     Contractive (@orarFunctor_map F A1 _ A2 _ B1 _ B2 _).
 
 Definition OrarFunctor_apply (F: OrarFunctor) (A: ofe) `{!Cofe A} : ora := orarFunctor_car F A A.
@@ -895,7 +895,7 @@ Delimit Scope uorarFunctor_scope with URF.
 Bind Scope uorarFunctor_scope with uorarFunctor.
 
 Class uorarFunctorContractive (F : uorarFunctor) :=
-  uorarFunctor_map_contractive `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} :>
+  uorarFunctor_map_contractive `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} ::
     Contractive (@uorarFunctor_map F A1 _ A2 _ B1 _ B2 _).
 
 Definition uorarFunctor_apply (F: uorarFunctor) (A: ofe) `{!Cofe A} : uora :=

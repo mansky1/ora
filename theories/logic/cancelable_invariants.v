@@ -75,7 +75,7 @@ Section proofs.
     pred_infinite I →
     ⊢ |={E}=> ∃ γ, <affine> ⌜ I γ ⌝ ∗ cinv_own γ 1 ∗ ∀ P, ▷ P ={E}=∗ cinv N γ P.
   Proof.
-    iIntros (?). iMod (own_alloc_strong(A := fracR) 1%Qp I) as (γ) "[Hfresh Hγ]"; [done|].
+    iIntros (?). iMod (own_alloc_strong(A := fracR) 1%Qp I) as (γ) "[Hfresh Hγ]"; [done..|].
     iExists γ. iIntros "!> {$Hγ $Hfresh}" (P) "HP".
     iMod (inv_alloc N _ (P ∨ cinv_own γ 1) with "[HP]"); eauto.
   Qed.
@@ -89,9 +89,9 @@ Section proofs.
     ⊢ |={E}=> ∃ γ, <affine> ⌜ I γ ⌝ ∗ cinv_own γ 1 ∗ ∀ P,
       |={E,E∖↑N}=> cinv N γ P ∗ (▷ P ={E∖↑N,E}=∗ emp).
   Proof.
-    iIntros (??). iMod (own_alloc_strong(A := fracR) 1%Qp I) as (γ) "[Hfresh Hγ]"; [done|].
+    iIntros (??). iMod (own_alloc_strong(A := fracR) 1%Qp I) as (γ) "[Hfresh Hγ]"; [done..|].
     iExists γ. iIntros "!> {$Hγ $Hfresh}" (P).
-    iMod (inv_alloc_open N _ (P ∨ cinv_own γ 1)) as "[Hinv Hclose]".
+    iMod (inv_alloc_open N _ (P ∨ cinv_own γ 1)) as "[Hinv Hclose]"; first done.
     iIntros "!>". iFrame. iIntros "HP". iApply "Hclose". iLeft. done.
   Qed.
 
@@ -111,7 +111,7 @@ Section proofs.
   Lemma cinv_alloc_open E N P :
     ↑N ⊆ E → ⊢ |={E,E∖↑N}=> ∃ γ, cinv N γ P ∗ cinv_own γ 1 ∗ (▷ P ={E∖↑N,E}=∗ emp).
   Proof.
-    iIntros (?). iMod (cinv_alloc_strong_open (λ _, True)) as (γ) "(_ & Htok & Hmake)".
+    iIntros (?). iMod (cinv_alloc_strong_open (λ _, True)) as (γ) "(_ & Htok & Hmake)"; [|done|].
     { apply pred_infinite_True. }
     iMod ("Hmake" $! P) as "[Hinv Hclose]". iIntros "!>". iExists γ. iFrame.
   Qed.
@@ -139,7 +139,7 @@ Section proofs.
     cinv N γ P -∗ cinv_own γ p ={E,E∖↑N}=∗ ▷ P ∗ cinv_own γ p ∗ (▷ P ={E∖↑N,E}=∗ emp).
   Proof.
     iIntros (?) "#Hinv Hγ".
-    iMod (cinv_acc_strong with "Hinv Hγ") as "($ & $ & H)".
+    iMod (cinv_acc_strong with "Hinv Hγ") as "($ & $ & H)"; first done.
     iIntros "!> HP".
     rewrite {2}(union_difference_L (↑N) E)=> //.
     iApply "H". by iLeft.
@@ -149,7 +149,7 @@ Section proofs.
   Lemma cinv_cancel E N γ P : ↑N ⊆ E → cinv N γ P -∗ cinv_own γ 1 ={E}=∗ ▷ P.
   Proof.
     iIntros (?) "#Hinv Hγ".
-    iMod (cinv_acc_strong with "Hinv Hγ") as "($ & Hγ & H)".
+    iMod (cinv_acc_strong with "Hinv Hγ") as "($ & Hγ & H)"; first done.
     rewrite {2}(union_difference_L (↑N) E)=> //.
     iApply "H". by iRight.
   Qed.

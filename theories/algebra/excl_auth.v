@@ -1,4 +1,4 @@
-From iris.algebra Require Export excl_auth.
+From iris.algebra.lib Require Export excl_auth.
 From iris_ora.algebra Require Export excl auth.
 From iris.prelude Require Import options.
 

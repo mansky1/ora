@@ -87,7 +87,7 @@ Global Instance ora_valid_persistent {A : ora} (a : A) :
 Proof. rewrite /Persistent. apply persistently_ora_valid_1. Qed.
 Global Instance ownM_persistent a : OraCoreId a → Persistent (@ouPred_ownM M a).
 Proof.
-  intros. rewrite /Persistent -{2}(core_id_core a). apply persistently_ownM_core.
+  intros. rewrite /Persistent -{2}(oracore_id_core a). apply persistently_ownM_core.
 Qed.
 
 (** For big ops *)

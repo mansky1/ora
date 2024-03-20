@@ -298,7 +298,7 @@ Module le_upd.
           { do 2 iModIntro. iExists (S n); iFrame; done. }
           iIntros (Q) "Q"; iModIntro; by iNext.
         + iModIntro. iDestruct "Hupd" as (m Hstep) "[Hown Hupd]". iNext.
-          iPoseProof (IH with "Hown Hupd") as "Hit".
+          iPoseProof (IH with "Hown Hupd") as "Hit"; first done.
           clear IH.
           assert (m ≤ n) as [k ->]%Nat.le_sum by lia.
           rewrite Nat.add_comm Nat.iter_add.

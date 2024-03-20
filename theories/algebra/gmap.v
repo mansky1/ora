@@ -170,7 +170,7 @@ Implicit Types x y : A.
 Global Instance gmap_core_id m : (∀ x : A, OraCoreId x) → OraCoreId m.
 Proof.
   intros; apply core_id_total=> i.
-  rewrite lookup_core. rewrite core_id_core //.
+  rewrite lookup_core oracore_id_core //.
 Qed.
 Global Instance gmap_singleton_core_id i (x : A) :
   OraCoreId x → OraCoreId {[ i := x ]}.

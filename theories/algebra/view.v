@@ -81,9 +81,9 @@ Section ora.
   Global Instance view_auth_oracore_id a : OraCoreId (●V□ a).
   Proof. do 2 constructor; simpl; auto. apply: core_id_core. Qed.
   Global Instance view_frag_oracore_id (b : B) : OraCoreId b → OraCoreId (◯V b).
-  Proof. do 2 constructor; simpl; auto. apply: core_id_core. Qed.
+  Proof. do 2 constructor; simpl; auto. apply: oracore_id_core. Qed.
   Global Instance view_both_oracore_id a (b : B) : OraCoreId b → OraCoreId (●V□ a ⋅ ◯V b).
-  Proof. do 2 constructor; simpl; auto. rewrite !left_id. apply: core_id_core. Qed.
+  Proof. do 2 constructor; simpl; auto. rewrite !left_id. apply: oracore_id_core. Qed.
 
   Global Instance view_ora_discrete :
     OfeDiscrete A → OraDiscrete B → ViewRelDiscrete rel →

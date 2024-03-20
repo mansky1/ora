@@ -9,7 +9,7 @@ From iris.prelude Require Import options.
 Import ouPred bi.
 
 Class irisGS_gen (hlc : has_lc) (Λ : language) (Σ : gFunctors) := IrisG {
-  iris_invGS :> invGS_gen hlc Σ;
+  iris_invGS :: invGS_gen hlc Σ;
 
   (** The state interpretation is an invariant that should hold in
   between each step of reduction. Here [Λstate] is the global state,
@@ -156,7 +156,7 @@ Proof.
   destruct (to_val e) as [v|] eqn:?.
   { iApply ("HΦ" with "[> -]"). by iApply (fupd_mask_mono E1 _). }
   iIntros (σ1 ns κ κs nt) "Hσ".
-  iMod (fupd_mask_subseteq E1) as "Hclose".
+  iMod (fupd_mask_subseteq E1) as "Hclose"; first done.
   iMod ("H" with "[$]") as "[% H]".
   iModIntro. iSplit; [by destruct s1, s2|]. iIntros (e2 σ2 efs Hstep) "Hcred".
   iMod ("H" with "[//] Hcred") as "H". iIntros "!> !>".  iMod "H". iModIntro.

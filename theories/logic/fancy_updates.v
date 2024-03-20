@@ -270,9 +270,9 @@ Proof.
     rewrite fupd_plain_forall_2 /=.
     iMod "H".
     rewrite -(Nat.iter_succ n (λ P, |={Eo}[Ei]▷=> P)%I) Nat.iter_succ_r.
-    iApply step_fupdN_intro.
+    iApply step_fupdN_intro; first done.
     iInduction n as [|] "IH"; simpl.
-    + iApply fupd_mask_intro; iIntros "Hclose !>"; iMod "Hclose" as "_".
+    + iApply fupd_mask_intro; first done; iIntros "Hclose !>"; iMod "Hclose" as "_".
       iApply fupd_plain_forall_2; iIntros (x).
       by iMod ("H" $! x).
     + iNext; by iApply "IH".

@@ -165,7 +165,7 @@ Proof.
   iModIntro; iExists i;  iSplit; [done|]. rewrite /ownI; iFrame "HiP".
   iExists (<[i:=P]>I); iSplitL "Hw".
   { by rewrite fmap_insert. }
-  iApply (big_sepM_insert _ I).
+  iApply (big_sepM_insert _ I); first done.
   iFrame "HI". iLeft. by rewrite /ownD; iFrame.
 Qed.
 
@@ -187,7 +187,7 @@ Proof.
   rewrite -/(ownD _). iFrame "HD".
   iIntros "HE". iExists (<[i:=P]>I); iSplitL "Hw".
   { by rewrite fmap_insert. }
-  iApply (big_sepM_insert _ I).
+  iApply (big_sepM_insert _ I); first done.
   iFrame "HI". by iRight.
 Qed.
 End wsat.

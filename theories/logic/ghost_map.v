@@ -150,7 +150,7 @@ Section lemmas.
   Proof.
     unseal. intros.
     iMod (own_alloc_strong (gmap_view_auth (V:=leibnizO V) (DfracOwn 1) ∅) P)
-      as (γ) "[% Hauth]".
+      as (γ) "[% Hauth]"; first done.
     { apply gmap_view_auth_valid. }
     iExists γ. iFrame "%".
     rewrite -big_opM_own_1 -own_op. iApply (own_update with "Hauth").
@@ -241,7 +241,7 @@ Section lemmas.
     ghost_map_auth γ 1 m ==∗ ghost_map_auth γ 1 (<[k := v]> m) ∗ k ↪[γ]□ v.
   Proof.
     iIntros (?) "Hauth".
-    iMod (ghost_map_insert k with "Hauth") as "[$ Helem]".
+    iMod (ghost_map_insert k with "Hauth") as "[$ Helem]"; first done.
     iApply (ghost_map_elem_persist with "Helem").
   Qed.
 
@@ -286,7 +286,7 @@ Section lemmas.
     ghost_map_auth γ 1 (m' ∪ m) ∗ ([∗ map] k ↦ v ∈ m', k ↪[γ]□ v).
   Proof.
     iIntros (Hdisj) "Hauth".
-    iMod (ghost_map_insert_big m' with "Hauth") as "[$ Helem]".
+    iMod (ghost_map_insert_big m' with "Hauth") as "[$ Helem]"; first done.
     iApply big_sepM_bupd. iApply (big_sepM_impl with "Helem").
     iIntros "!#" (k v) "_". iApply ghost_map_elem_persist.
   Qed.
