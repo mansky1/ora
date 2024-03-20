@@ -8,7 +8,7 @@ Proof.
   inversion 3; split=> //.
   trans y; last done.
   apply H; last done.
-  eapply cmra_validN_includedN; done.
+  eapply (cmra_validN_includedN(A:=A)); done.
 Qed.
 
 Definition authR (A : uora) (H : ∀n (x y : A), ✓{n} y → x ≼ₒ{n} y → x ≼{n} y) : ora := view.viewR (A:=A) (B:=A) auth_view_rel (auth_view_rel_order H).

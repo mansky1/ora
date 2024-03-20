@@ -140,7 +140,7 @@ Proof.
   intros ?. rewrite /iRes_singleton.
   apply (discrete_fun_singleton_discrete(B := λ x, uora_ucmraR _)), gmap_singleton_discrete; [apply _|].
   intros x Hx. assert (ora_transport inG_prf a ≡ inG_fold x) as Ha.
-  { apply (discrete _). by rewrite -Hx inG_fold_unfold. }
+  { eapply (discrete _). 1: by apply _. by rewrite -Hx inG_fold_unfold. }
   by rewrite Ha inG_unfold_fold.
 Qed.
 Local Instance iRes_singleton_core_id γ a :
