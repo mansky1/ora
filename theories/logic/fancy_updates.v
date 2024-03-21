@@ -103,7 +103,7 @@ Proof.
   iAssert (|={⊤,E2}=> P)%I with "[Hc]" as "H".
   { iMod (fupd_mask_subseteq E1) as "_"; first done. iApply Hfupd. }
   rewrite ouPred_fupd_unseal /ouPred_fupd_def /=.
-  iMod ("H" with "[$]") as "[Hw [HE >H']]"; by iFrame.
+  iMod ("H" with "[$]") as "[_ [_ >H']]"; by iFrame.
 Qed.
 
 Lemma fupd_soundness_no_lc `{!invGpreS Σ} E1 E2 (P : iProp Σ) `{!Plain P} `{!Absorbing P} m :
@@ -116,7 +116,7 @@ Proof.
   iAssert (|={⊤,E2}=> P)%I with "[Hc]" as "H".
   { iMod (fupd_mask_subseteq E1) as "_"; first done. iApply Hfupd; last done. }
   rewrite ouPred_fupd_unseal /ouPred_fupd_def.
-  iMod ("H" with "[$]") as "[Hw [HE >H']]"; by iFrame.
+  iMod ("H" with "[$]") as "[_ [_ >H']]"; by iFrame.
 Qed.
 
 Lemma fupd_soundness_lc `{!invGpreS Σ} n E1 E2 (P: iProp Σ) `{!Plain P} `{!Absorbing P}:
