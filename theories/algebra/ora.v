@@ -16,7 +16,7 @@ Notation "(≼ₒ)" := Oraorder (only parsing) : stdpp_scope.
 Class OraOrderN A := OraorderN : nat → A → A → Prop.
 Notation "x ≼ₒ{ n } y" := (OraorderN n x y)
   (at level 70, n at next level, format "x  ≼ₒ{ n }  y") : stdpp_scope.
-Notation "(≼ₒ{ n })" := (OraorderN n) (only parsing) : stdpp_scope.
+(*Notation "(≼ₒ{ n })" := (OraorderN n) (only parsing) : stdpp_scope.*)
 #[export] Instance: Params (@OraorderN) 3 := {}.
 #[export] Hint Extern 0 (_ ≼ₒ{_} _) => reflexivity : core.
 
@@ -49,7 +49,7 @@ Section mixin.
     (* OraOrder *)
     mixin_ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y;
     mixin_ora_orderN_S n x y : x ≼ₒ{S n} y → x ≼ₒ{n} y;
-    mixin_ora_orderN_trans n : Transitive (≼ₒ{n});
+    mixin_ora_orderN_trans n : Transitive (OraorderN n);
     mixin_ora_orderN_op n x x' y : x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y;
     mixin_ora_validN_orderN n x y : ✓{n} x → y ≼ₒ{n} x → ✓{n} y;
     mixin_ora_order_orderN x y : x ≼ₒ y ↔ (∀ n, x ≼ₒ{n} y);
@@ -309,7 +309,7 @@ Proof.
   - eapply ora_orderN_proper; eauto.
 Qed.
 Global Instance ora_orderN_properN n :
-  Proper (flip (≼ₒ{n}) ==> (≼ₒ{n}) ==> impl) (@OraorderN A _ n) | 1.
+  Proper (flip (OraorderN n) ==> (OraorderN n) ==> impl) (@OraorderN A _ n) | 1.
 Proof.
   intros x x' Hx y y' Hy Hz.
   etrans; first apply Hx. etrans; eauto.
@@ -407,7 +407,7 @@ Proof. induction 2; auto using ora_orderN_S. Qed.
 (*   exists cy; by rewrite Hcx. *)
 (*  Qed. *)
 
-Global Instance ora_orderN_refl n: Reflexive ((≼ₒ{n}) : A → A → Prop).
+Global Instance ora_orderN_refl n: Reflexive ((OraorderN n) : A → A → Prop).
 Proof. intros ?; by apply ora_dist_orderN. Qed.
 
 Lemma ora_order_refl : Reflexive ((≼ₒ) : A → A → Prop).
