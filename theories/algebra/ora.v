@@ -373,6 +373,12 @@ Qed.*)
 (** ** CoreId elements *)
 Lemma oracore_id_dup x `{!OraCoreId x} : x ≡ x ⋅ x.
 Proof. by apply @cmra_pcore_dup' with x. Qed.
+Global Instance ora_coreid_increasing x `{!OraCoreId x} : Increasing x.
+Proof.
+  inversion OraCoreId0 as [?? Heq|].
+  intros ?.
+  rewrite -Heq; eapply ora_pcore_increasing; eauto.
+Qed.
 
 (** ** Exclusive elements *)
 Lemma OraexclusiveN_l n x `{!OraExclusive x} y : ✓{n} (x ⋅ y) → False.
@@ -1253,6 +1259,10 @@ Section prod.
     by intros ? []; split; apply ora_discrete_valid.
     by intros ? ? []; split; apply ora_discrete_order.
   Qed.
+
+  Global Instance pair_increasing x y :
+    Increasing x → Increasing y → Increasing (x,y).
+  Proof. split; auto. Qed.
 
   Global Instance pair_core_id x y :
     OraCoreId x → OraCoreId y → OraCoreId (x,y).

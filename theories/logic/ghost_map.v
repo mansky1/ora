@@ -66,7 +66,7 @@ Section lemmas.
     AsFractional (k ↪[γ]{#q} v) (λ q, k ↪[γ]{#q} v)%I q.
   Proof. split; first done. apply _. Qed.*)
   Global Instance ghost_map_elem_affine k γ v : Affine (k ↪[γ]□ v).
-  Proof. unseal. apply own_core_affine, view_frag_core_id, iris.algebra.gmap.gmap_singleton_core_id, _. Qed.
+  Proof. unseal. apply _. Qed.
 
   Local Lemma ghost_map_elems_unseal γ m dq :
     ([∗ map] k ↦ v ∈ m, k ↪[γ]{dq} v) ==∗

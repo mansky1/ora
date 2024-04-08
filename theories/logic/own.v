@@ -216,7 +216,7 @@ Global Instance own_timeless γ a : Discrete a → Timeless (own γ a).
 Proof. rewrite !own_eq /own_def. apply _. Qed.
 Global Instance own_core_persistent γ a : OraCoreId a → Persistent (own γ a).
 Proof. rewrite !own_eq /own_def; apply _. Qed.
-Global Instance own_core_affine γ a : OraCoreId a → Affine (own γ a).
+Global Instance own_increasing_affine γ a : Increasing a → Affine (own γ a).
 Proof. rewrite /Affine !own_eq /own_def.
   intros. etrans; last apply ownM_unit_affine.
   apply ownM_mono.
@@ -229,8 +229,7 @@ Proof. rewrite /Affine !own_eq /own_def.
   apply ora_morphism_increasing; first by apply _.
   intros ?.
   destruct inG_prf; simpl.
-  inversion H as [?? Heq Hcore|]; subst.
-  rewrite -Heq; eapply ora_pcore_increasing; eauto.
+  auto.
 Qed.
 
 (*Lemma later_own γ a : ▷ own γ a -∗ ◇ ∃ b, own γ b ∧ ▷ (a ≡ b).

@@ -233,24 +233,24 @@ Section auth.
   Local Canonical Structure authR := (auth.authR _ auth_order).
   Local Canonical Structure authUR := (auth.authUR _ auth_order).
 
-  Lemma auth_auth_dfrac_validI dq a : ✓ (●{dq} a : authR) ⊣⊢ ⌜✓dq⌝ ∧ ✓ a.
+  Lemma auth_auth_dfrac_validI dq a : ✓ (●{dq} a : authR) ⊣⊢ ⌜✓dq⌝ ∧ ✓ (a : uora_oraR _).
   Proof.
     apply view_auth_dfrac_validI=> n. ouPred.unseal; split; [|by intros [??]].
     split; [|done]. apply ucmra_unit_leastN.
   Qed.
-  Lemma auth_auth_validI a : ✓ (● a : authR) ⊣⊢ ✓ a.
+  Lemma auth_auth_validI a : ✓ (● a : authR) ⊣⊢ ✓ (a : uora_oraR _).
   Proof.
     by rewrite auth_auth_dfrac_validI bi.pure_True // left_id.
   Qed.
 
-  Lemma auth_frag_validI a : ✓ (◯ a : authR) ⊣⊢ ✓ a.
+  Lemma auth_frag_validI a : ✓ (◯ a : authR) ⊣⊢ ✓ (a : uora_oraR _).
   Proof.
     apply view_frag_validI=> n x.
     rewrite auth_view_rel_exists. by ouPred.unseal.
   Qed.
 
   Lemma auth_auth_dfrac_op_validI dq1 dq2 a b :
-    ✓ (●{dq1} a ⋅ ●{dq2} b : authR) ⊣⊢ ⌜✓(dq1 ⋅ dq2)⌝ ∧ a ≡ b ∧ ✓ a.
+    ✓ (●{dq1} a ⋅ ●{dq2} b : authR) ⊣⊢ ⌜✓(dq1 ⋅ dq2)⌝ ∧ a ≡ b ∧ ✓ (a : uora_oraR _).
   Proof.
     apply view_auth_dfrac_op_validI=> n. ouPred.unseal.
     split.
@@ -258,10 +258,10 @@ Section auth.
     - split; last done. apply ucmra_unit_leastN.
   Qed.
   Lemma auth_both_dfrac_validI dq a b :
-    ✓ (●{dq} a ⋅ ◯ b : authR) ⊣⊢ ⌜✓dq⌝ ∧ (∃ c, a ≡ b ⋅ c) ∧ ✓ a.
+    ✓ (●{dq} a ⋅ ◯ b : authR) ⊣⊢ ⌜✓dq⌝ ∧ (∃ c, a ≡ b ⋅ c) ∧ ✓ (a : uora_oraR _).
   Proof. apply view_both_dfrac_validI=> n. by ouPred.unseal. Qed.
   Lemma auth_both_validI a b :
-    ✓ (● a ⋅ ◯ b : authR) ⊣⊢ (∃ c, a ≡ b ⋅ c) ∧ ✓ a.
+    ✓ (● a ⋅ ◯ b : authR) ⊣⊢ (∃ c, a ≡ b ⋅ c) ∧ ✓ (a : uora_oraR _).
   Proof.
     by rewrite auth_both_dfrac_validI bi.pure_True // left_id.
   Qed.
@@ -281,51 +281,38 @@ Section excl_auth.
 End excl_auth.
 
 Section frac_auth.
-  Context {A : ora}.
+  Context {A : cmra}.
 
-  Context (order : ∀n (x y : A), ✓{n} y → x ≼ₒ{n} y → x ≡{n}≡ y).
-
-  Local Canonical Structure frac_authR := (frac_authR order).
-  Local Canonical Structure frac_authUR := (frac_authUR order).
-
-  Lemma frac_auth_auth_validI a : ✓ (●F a : frac_authR) ⊣⊢ ✓ a.
+(*  Lemma frac_auth_auth_validI (a : A) : ✓ (●F a : frac_authR A) ⊣⊢ ✓ a.
   Proof.
     rewrite /frac_auth_auth auth_auth_validI option_validI prod_validI /=.
     unshelve erewrite (@discrete_valid) by (apply ext_order.positive_discrete, _).
     rewrite bi.pure_True // bi.True_and //.
   Qed.
 
-  Lemma frac_auth_frag_validI q a : ✓ (◯F{q} a : frac_authR) ⊣⊢ ⌜✓ q⌝ ∧ ✓ a.
+  Lemma frac_auth_frag_validI q a : ✓ (◯F{q} a : frac_authR A) ⊣⊢ ⌜✓ q⌝ ∧ ✓ a.
   Proof.
     rewrite /frac_auth_frag auth_frag_validI option_validI prod_validI /=.
     unshelve erewrite (@discrete_valid) by (apply ext_order.positive_discrete, _); done.
   Qed.
 
-  Lemma frac_auth_frag_full_validI a : ✓ (◯F a : frac_authR) ⊣⊢ ✓ a.
+  Lemma frac_auth_frag_full_validI a : ✓ (◯F a : frac_authR A) ⊣⊢ ✓ a.
   Proof.
     rewrite frac_auth_frag_validI bi.pure_True // bi.True_and //.
-  Qed.
+  Qed.*)
 
-  Lemma frac_auth_agreeI q a b : ✓ (●F a ⋅ ◯F{q} b : frac_authR) ⊢ (if decide (q = 1%Qp) then a ≡ b else ∃ c, a ≡ b ⋅ c)%I ∧ ✓ a.
+  Lemma frac_auth_agreeI q a b : ✓ (●F a ⋅ ◯F{q} b : frac_authR A) ⊢ (if decide (q = 1%Qp) then a ≡ b else ∃ c, a ≡ b ⋅ c)%I.
   Proof.
-    rewrite /frac_auth_auth /frac_auth_frag auth_both_validI.
-    apply bi.and_mono.
-    - apply bi.exist_elim=> c; rewrite option_equivI /=.
-      rewrite cmra.Some_op_opM.
-      destruct (opM (q, b) c) as (q', c') eqn: Hc; rewrite Hc prod_equivI /= discrete_eq_1.
-      apply bi.pure_elim_l; intros Hq; hnf in Hq; subst.
-      destruct c as [(?,?)|]; simpl in Hc.
-      + injection Hc as Hq <-.
-        destruct (decide (q = 1%Qp)).
-        { by subst; apply Qp.add_id_free in Hq. }
-        rewrite -bi.exist_intro //.
-      + injection Hc as -> <-.
-        by destruct (decide _).
-    - rewrite option_validI prod_validI /=.
-      apply bi.and_elim_r.
+    ouPred.unseal. split=> n x _ /=.
+    destruct (decide _); rewrite /ouPred_holds /=.
+    - subst; apply frac_auth_agreeN.
+    - intros (? & _)%auth_both_validN.
+      apply cmra.Some_includedN in H as [H | H].
+      { inv H. }
+      apply prod_includedN in H as (? & ?); auto.
   Qed.
 
-  Lemma frac_auth_agree_fullI a b : ✓ (●F a ⋅ ◯F b : frac_authR) ⊢ (a ≡ b) ∧ ✓ a.
+  Lemma frac_auth_agree_fullI a b : ✓ (●F a ⋅ ◯F b : frac_authR A) ⊢ a ≡ b.
   Proof.
     rewrite frac_auth_agreeI //.
   Qed.
@@ -367,7 +354,7 @@ Section gmap_view.
   Implicit Types (m : gmap K V) (k : K) (dq : dfrac) (v : V).
 
   Lemma gmap_view_both_validI m k dq v :
-    ✓ (gmap_view_auth (DfracOwn 1) m ⋅ gmap_view_frag k dq v) ⊢
+    ✓ (gmap_view_auth (DfracOwn 1) m ⋅ gmap_view_frag k dq v : gmap_viewR K V) ⊢
     ✓ dq ∧ m !! k ≡ Some v.
   Proof.
     rewrite /gmap_view_auth /gmap_view_frag. apply view_both_validI_1.
@@ -375,7 +362,7 @@ Section gmap_view.
   Qed.
 
   Lemma gmap_view_frag_op_validI k dq1 dq2 v1 v2 :
-    ✓ (gmap_view_frag k dq1 v1 ⋅ gmap_view_frag k dq2 v2) ⊣⊢
+    ✓ (gmap_view_frag k dq1 v1 ⋅ gmap_view_frag k dq2 v2 : gmap_viewR K V) ⊣⊢
     ✓ (dq1 ⋅ dq2) ∧ v1 ≡ v2.
   Proof.
     rewrite /gmap_view_frag -view_frag_op. apply view_frag_validI=> n x.

@@ -9,7 +9,7 @@ Context {A : cmra} `{CmraTotal A}.
 Instance incl_orderN : OraOrderN A := includedN.
 Instance incl_order : OraOrder A := λ x y, ∀n, x ≼{n} y.
 
-Instance incl_increasing x : Increasing x.
+Global Instance incl_increasing x : Increasing x.
 Proof.
   intros ?; eexists.
   by rewrite comm.

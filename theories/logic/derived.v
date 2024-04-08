@@ -25,9 +25,13 @@ Global Instance ora_valid_proper {A : ora} :
   Proper ((≡) ==> (⊣⊢)) (@ouPred_ora_valid M A) := ne_proper _.
 
 (** Own and valid derived *)
+Global Instance ownM_mono : Proper (flip (≼ₒ) ==> (⊢)) (@ouPred_ownM M).
+Proof. by intros ???; apply ownM_order. Qed.
 Global Instance ownM_unit_affine : Affine(PROP:=ouPredI M) (ouPred_ownM ε).
 Proof. apply ownM_unit_discard. Qed.
-Global Instance ownM_core_affine a : Affine(PROP:=ouPredI M) (ouPred_ownM (core a)).
+Global Instance ownM_increasing_affine a {H : Increasing a} : Affine (PROP:=ouPredI M) (ouPred_ownM a).
+Proof. apply uora_unit_order_increasing in H. rewrite /Affine ownM_mono //. apply ownM_unit_discard. Qed.
+Global Instance ownM_core_affine a : Affine (PROP:=ouPredI M) (ouPred_ownM (core a)).
 Proof. apply ownM_core_discard. Qed.
 Lemma persistently_ora_valid_1 {A : ora} (a : A) : ✓ a ⊢@{ouPredI M} <pers> (✓ a).
 Proof. by rewrite {1}plainly_ora_valid_1 plainly_elim_persistently. Qed.
@@ -38,8 +42,6 @@ Proof. intros; rewrite /bi_intuitionistically -{1}(oracore_id_core a) -{1}(affin
 Qed.
 Lemma ownM_invalid (a : M) : ¬ ✓{0} a → ouPred_ownM a ⊢ False.
 Proof. by intros; rewrite ownM_valid ora_valid_elim. Qed.
-Global Instance ownM_mono : Proper (flip (≼ₒ) ==> (⊢)) (@ouPred_ownM M).
-Proof. by intros ???; apply ownM_order. Qed.
 Lemma ownM_unit' : ouPred_ownM ε ⊣⊢ emp.
 Proof. apply (anti_symm _); [apply ownM_unit_discard | apply ownM_unit]. Qed.
 Instance absorbing_valid {A : ora} (a : A) : Absorbing(PROP:=ouPredI M) (✓ a).
@@ -57,6 +59,7 @@ Proof.
     first by rewrite persistently_elim.
   apply:persistently_ora_valid_1.
 Qed.*)
+
 Lemma bupd_ownM_update (x y : M) : x ~~> y → ouPred_ownM x ⊢ |==> ouPred_ownM y.
 Proof.
   intros; rewrite (bupd_ownM_updateP _ (y =.)); last by apply @cmra_update_updateP.
