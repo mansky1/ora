@@ -19,8 +19,8 @@ Section ora.
 Context `{Countable K} {A : ora}.
 Implicit Types m : gmap K A.
 
-Instance gmap_orderN : OraOrderN (gmap K A) := λ n, map_relation (ora_orderN A n) (λ _, False) Increasing.
-Instance gmap_order : OraOrder (gmap K A) := map_relation (ora_order A) (λ _, False) Increasing.
+Instance gmap_orderN : OraOrderN (gmap K A) := λ n, map_relation (λ _, ora_orderN A n) (λ _ _, False) (λ _, Increasing).
+Instance gmap_order : OraOrder (gmap K A) := map_relation (λ _, ora_order A) (λ _ _, False) (λ _, Increasing).
 
 Lemma lookup_increasing : forall m i, Increasing m -> Increasing (m !! i).
 Proof.

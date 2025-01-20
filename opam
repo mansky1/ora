@@ -1,11 +1,21 @@
-opam-version: "1.2"
+opam-version: "2.0"
+synopsis: "Ordered Resource Algebras for Iris"
 name: "coq-iris-ora"
-maintainer: "Ralf Jung"
+authors: [
+  "Robbert Krebbers"
+  "Ralf Jung"
+  "Amin Timany"
+  "William Mansky"
+]
+maintainer: "William Mansky"
 build: [make "-j%{jobs}%"]
 install: [make "install"]
 description: "Iris Ora"
 remove: ["rm" "-rf" "'%{lib}%/coq/user-contrib/iris_ora"]
 depends: [
-  "coq" { >= "8.16.1" }
-  "coq-iris" { >= "dev.2023-11-20.1.7d72ccb5" }
+  "coq-iris" { = "4.3.0" }
 ]
+#url {
+#  src: "https://github.com/PrincetonUniversity/VST/releases/download/v3.0beta2/VST-3.0beta2.tar.gz"
+#  checksum: "sha256=7887c56ea0ec8b722d1ff0a8471fdefc8a24f5ae6522bd3763da036691b7c1e7"
+#}
