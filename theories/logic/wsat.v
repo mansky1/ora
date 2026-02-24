@@ -11,9 +11,13 @@ exception of what's in the [wsatGS] module. The module [wsatGS] is thus exported
 Module wsatGS.
 
   Canonical Structure coPset_disjR := inclR coPset_disjR.
-  Canonical Structure coPset_disjUR := Uora coPset_disjR coPset_disj_ucmra_mixin.
+  Lemma coPset_disj_uora_mixin : UoraMixin coPset_disj.
+  Proof. done. Qed.
+  Canonical Structure coPset_disjUR := Uora coPset_disjR coPset_disj_ucmra_mixin coPset_disj_uora_mixin.
   Canonical Structure gset_disjR K `{Countable K} := inclR (gset_disjR K).
-  Canonical Structure gset_disjUR K `{Countable K} := Uora (gset_disjR K) (gset_disj_ucmra_mixin(K := K)).
+  Lemma gset_disj_uora_mixin `{Countable K} : UoraMixin (gset_disj K).
+  Proof. done. Qed.
+  Canonical Structure gset_disjUR K `{Countable K} := Uora (gset_disjR K) (gset_disj_ucmra_mixin(K := K)) (gset_disj_uora_mixin(K := K)).
 
   Class wsatGpreS (Σ : gFunctors) : Set := WsatGpreS {
     wsatGpreS_inv : inG Σ (gmap_viewR positive (laterO (iPropO Σ)));

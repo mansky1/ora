@@ -181,6 +181,11 @@ core. *)
 Class OraTotal (A : ora) := ora_total (x : A) : is_Some (pcore x).
 #[export] Hint Mode OraTotal ! : typeclass_instances.
 
+Record UoraMixin A `{Dist A, Equiv A, Unit A} := {
+    (* needed to make emp timeless *)
+    mixin_uora_unit_discrete (y : A) : ε ≡{0}≡ y → ε ≡ y;
+  }.
+
 Structure uora := Uora' {
   uora_car :> Type;
   uora_equiv : Equiv uora_car;
@@ -196,10 +201,11 @@ Structure uora := Uora' {
   uora_cmra_mixin : CmraMixin uora_car;
   uora_ora_mixin : OraMixin uora_car;
   uora_ucmra_mixin : UcmraMixin uora_car;
+  uora_mixin : UoraMixin uora_car;
 }.
-Arguments Uora' _ {_ _ _ _ _ _ _ _ _} _ _ _.
-Notation Uora A m :=
-  (Uora' A (ofe_mixin_of A%type) (cmra_mixin_of A%type) (ora_mixin_of A%type) m) (only parsing).
+Arguments Uora' _ {_ _ _ _ _ _ _ _ _} _ _ _ _.
+Notation Uora A m n :=
+  (Uora' A (ofe_mixin_of A%type) (cmra_mixin_of A%type) (ora_mixin_of A%type) m n) (only parsing).
 Arguments uora_car : simpl never.
 Arguments uora_equiv : simpl never.
 Arguments uora_dist : simpl never.
@@ -213,6 +219,7 @@ Arguments uora_ofe_mixin : simpl never.
 Arguments uora_cmra_mixin : simpl never.
 Arguments uora_ora_mixin : simpl never.
 Arguments uora_ucmra_mixin : simpl never.
+Arguments uora_mixin : simpl never.
 Add Printing Constructor uora.
 #[export] Hint Extern 0 (Unit _) => eapply (@uora_unit _) : typeclass_instances.
 Coercion uora_ofeO (A : uora) : ofe := Ofe A (uora_ofe_mixin A).
@@ -659,6 +666,8 @@ Section uora.
   Proof. apply ucmra_unit_right_id. Qed.
   Global Instance uora_unit_core_id : OraCoreId (ε:A).
   Proof. apply ucmra_pcore_unit. Qed.
+  Global Instance uora_unit_discrete : Discrete (ε:A).
+  Proof. rewrite /Discrete. apply (mixin_uora_unit_discrete _ (uora_mixin A)). Qed.
 
   Lemma uora_unit_order_increasing x `{!Increasing x} : ε ≼ₒ x.
   Proof.
@@ -1035,9 +1044,11 @@ Section unit.
   Canonical Structure unitR : ora := Ora unit unit_ora_mixin.
 
   Instance unit_unit : Unit () := ().
-  Lemma unit_uora_mixin : UcmraMixin ().
+  Lemma unit_ucmra_mixin : UcmraMixin ().
   Proof. done. Qed.
-  Canonical Structure unitUR : uora := Uora unit unit_uora_mixin.
+  Lemma unit_uora_mixin : UoraMixin ().
+  Proof. done. Qed.
+  Canonical Structure unitUR : uora := Uora unit unit_ucmra_mixin unit_uora_mixin.
 
   Global Instance unit_cmra_discrete : OraDiscrete unitR.
   Proof. done. Qed.
@@ -1070,9 +1081,9 @@ Section nat.
   Proof. apply discrete_ora_discrete. Qed.
 
   Instance nat_unit : Unit nat := 0.
-  Lemma nat_uora_mixin : UcmraMixin nat.
-  Proof. split; apply _ || done. Qed.
-  Canonical Structure natUR : uora := Uora nat nat_ucmra_mixin.
+  Lemma nat_uora_mixin : UoraMixin nat.
+  Proof. done. Qed.
+  Canonical Structure natUR : uora := Uora nat nat_ucmra_mixin nat_uora_mixin.
 
   Global Instance nat_cancelable (x : nat) : OraCancelable x.
   Proof. by intros ???? ?%Nat.add_cancel_l. Qed.
@@ -1131,8 +1142,10 @@ Section mnat.
 
   Lemma mnat_ucmra_mixin : UcmraMixin mnat.
   Proof. split; apply _ || done. Qed.
+  Lemma mnat_uora_mixin : UoraMixin mnat.
+  Proof. done. Qed.
   Canonical Structure mnatUR : uora :=
-    Uora' mnat (discrete_ofe_mixin _) (discrete_cmra_mixin _ mnat_ra_mixin) (discrete_ora_mixin _ mnat_dora_mixin) mnat_ucmra_mixin.
+    Uora' mnat (discrete_ofe_mixin _) (discrete_cmra_mixin _ mnat_ra_mixin) (discrete_ora_mixin _ mnat_dora_mixin) mnat_ucmra_mixin mnat_uora_mixin.
 
   Global Instance mnat_core_id (x : mnat) : OraCoreId x.
   Proof. by constructor. Qed.
@@ -1298,7 +1311,9 @@ Section prod_unit.
     - by split; rewrite /=left_id.
     - rewrite prod_pcore_Some'; split; apply (oracore_id _).
   Qed.
-  Canonical Structure prodUR := Uora' (prod A B) (ofe_mixin_of (A * B)) (@prod_cmra_mixin A B) prod_ora_mixin prod_ucmra_mixin.
+  Lemma prod_uora_mixin : UoraMixin (A * B).
+  Proof. split. intros ? [? ?]. split; by apply uora_unit_discrete. Qed.
+  Canonical Structure prodUR := Uora' (prod A B) (ofe_mixin_of (A * B)) (@prod_cmra_mixin A B) prod_ora_mixin prod_ucmra_mixin prod_uora_mixin.
 
   Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ε) ⋅ (ε, y).
   Proof. by rewrite pair_op left_id right_id. Qed.
@@ -1581,9 +1596,11 @@ Section option.
  Qed.
 
   Instance option_unit : Unit (option A) := None.
-  Lemma option_uora_mixin : UcmraMixin optionR.
+  Lemma option_ucmra_mixin : UcmraMixin optionR.
   Proof. split. done. by intros []. done. Qed.
-  Canonical Structure optionUR := Uora (option A) option_uora_mixin.
+  Lemma option_uora_mixin : UoraMixin optionR.
+  Proof. split. by inversion 1. Qed.
+  Canonical Structure optionUR := Uora (option A) option_ucmra_mixin option_uora_mixin.
 
   (** Misc *)
   Lemma op_None ma mb : ma ⋅ mb = None ↔ ma = None ∧ mb = None.
@@ -1846,7 +1863,12 @@ Section discrete_fun_ora.
     - by intros f x; rewrite discrete_fun_lookup_op left_id.
     - constructor=> x. apply oracore_id_core, _.
   Qed.
-  Canonical Structure discrete_funUR := Uora (discrete_fun B) discrete_fun_ucmra_mixin.
+
+  Lemma discrete_fun_uora_mixin : UoraMixin (discrete_fun B).
+  Proof.
+    split. intros x ??. by apply uora_unit_discrete.
+  Qed.
+  Canonical Structure discrete_funUR := Uora (discrete_fun B) discrete_fun_ucmra_mixin discrete_fun_uora_mixin.
 
   Global Instance discrete_fun_unit_discrete :
     (∀ i, Discrete (ε : B i)) → Discrete (ε : discrete_fun B).

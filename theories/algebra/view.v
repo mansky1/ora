@@ -98,9 +98,16 @@ Section ora.
     - by intros ?? [??]; split; apply ora_discrete_order.
   Qed.
 
+  Lemma view_uora_mixin : UoraMixin (view rel).
+  Proof.
+    split. intros ? [Ha Hf]; split.
+    - by inv Ha.
+    - by apply uora_unit_discrete.
+  Qed.
+
 End ora.
 
-Notation viewUR rel := (Uora (view rel) (view_ucmra_mixin rel)).
+Notation viewUR rel := (Uora (view rel) (view_ucmra_mixin rel) (view_uora_mixin rel)).
 
 
 (** * Utilities to construct functors *)

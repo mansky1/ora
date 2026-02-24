@@ -78,6 +78,11 @@ Proof.
   apply (internal_eq_rewrite' b a (ouPred_ownM) _);
     auto using and_elim_l, and_elim_r.
 Qed.
+Global Instance emp_timeless : Timeless (emp : ouPred M)%I.
+Proof.
+  rewrite /Timeless later_mono; last apply ownM_unit.
+  rewrite ownM_timeless ownM_unit_discard //.
+Qed.
 
 (** Plainness *)
 Global Instance ora_valid_plain {A : ora} (a : A) :

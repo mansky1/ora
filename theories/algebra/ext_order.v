@@ -128,8 +128,11 @@ Proof.
     by constructor.
 Qed.
 
+Lemma flat_uora_mixin : UoraMixin A.
+Proof. split. apply discrete_unit. Qed.
+
 Local Canonical Structure flatR : ora := Ora A flat_ora_mixin.
-Local Canonical Structure flatUR : uora := Uora A (ucmra_mixin A).
+Local Canonical Structure flatUR : uora := Uora A (ucmra_mixin A) flat_uora_mixin.
 
 End flat.
 

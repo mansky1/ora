@@ -154,7 +154,10 @@ Qed.
 Global Instance gmap_ora_total : OraTotal gmapR.
 Proof. rewrite /OraTotal; eauto. Qed.
 
-Canonical Structure gmapUR : uora := Uora (gmap K A) (gmap_ucmra_mixin(H := H)(A := A)).
+Lemma gmap_uora_mixin : UoraMixin (gmap K A).
+Proof. split. intros ? Hu ?. specialize (Hu i); rewrite lookup_empty in Hu. by inv Hu. Qed.
+
+Canonical Structure gmapUR : uora := Uora (gmap K A) (gmap_ucmra_mixin(H := H)(A := A)) gmap_uora_mixin.
 
 End ora.
 

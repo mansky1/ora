@@ -13,7 +13,7 @@ Qed.
 
 Definition authR (A : uora) (H : ∀n (x y : A), ✓{n} y → x ≼ₒ{n} y → x ≼{n} y) : ora := view.viewR (A:=A) (B:=A) auth_view_rel (auth_view_rel_order H).
 Definition authUR (A : uora) (H : ∀n (x y : A), ✓{n} y → x ≼ₒ{n} y → x ≼{n} y) : uora :=
-  (Uora' (auth A) (ofe_mixin (authO A)) (cmra_mixin (iris.algebra.auth.authR A)) (ora_mixin (authR A H)) (view_ucmra_mixin auth_view_rel)).
+  (Uora' (auth A) (ofe_mixin (authO A)) (cmra_mixin (iris.algebra.auth.authR A)) (ora_mixin (authR A H)) (view_ucmra_mixin auth_view_rel) (view_uora_mixin auth_view_rel)).
 
 Lemma auth_frag_core_id {A : uora} (a : A) (H : ∀n (x y : A), ✓{n} y → x ≼ₒ{n} y → x ≼{n} y) :
   OraCoreId a → OraCoreId(A := authR A H) (◯ a).

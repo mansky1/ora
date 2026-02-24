@@ -10,7 +10,15 @@ Section frac_auth.
 Context (A : cmra).
 
 Canonical Structure frac_authR := inclR (frac_authR A).
-Canonical Structure frac_authUR := Uora frac_authR (ucmra_mixin (frac_authUR A)).
+
+Lemma frac_auth_uora_mixin : UoraMixin (auth (option (frac * A))).
+Proof.
+  split. intros ? [Ha Hf]; split.
+  - by inv Ha.
+  - by inv Hf.
+Qed.
+
+Canonical Structure frac_authUR := Uora frac_authR (ucmra_mixin (frac_authUR A)) frac_auth_uora_mixin.
 
 End frac_auth.
 
