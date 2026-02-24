@@ -13,5 +13,5 @@ install: [make "install"]
 description: "Iris Ora"
 remove: ["rm" "-rf" "'%{lib}%/coq/user-contrib/iris_ora"]
 depends: [
-  "coq-iris" { = "4.3.0" }
+  "coq-iris" { >= "4.3.0" }
 ]
