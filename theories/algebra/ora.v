@@ -13,11 +13,11 @@ Notation "(≼ₒ)" := Oraorder (only parsing) : stdpp_scope.
 #[export] Hint Extern 0 (_ ≼ₒ _) => reflexivity : core.
 #[export] Instance: Params (@Oraorder) 2 := {}.
 
-Class OraOrderN A := OraorderN : nat → A → A → Prop.
+Class OraOrderN {SI : sidx} A := OraorderN : SI → A → A → Prop.
 Notation "x ≼ₒ{ n } y" := (OraorderN n x y)
   (at level 70, n at next level, format "x  ≼ₒ{ n }  y") : stdpp_scope.
 (*Notation "(≼ₒ{ n })" := (OraorderN n) (only parsing) : stdpp_scope.*)
-#[export] Instance: Params (@OraorderN) 3 := {}.
+#[export] Instance: Params (@OraorderN) 4 := {}.
 #[export] Hint Extern 0 (_ ≼ₒ{_} _) => reflexivity : core.
 
 Class Increasing `{Op A, OraOrder A} (x : A) := increasing : ∀ y, y ≼ₒ x ⋅ y.
@@ -27,13 +27,13 @@ Arguments increasing {_ _ _} _ {_}.
 Arguments increasingN {_ _ _} _ _ {_}.*)
 
 Section mixin.
-  Context (A : Type).
+  Context {SI : sidx} (A : Type).
 
   Implicit Types (x : A).
   Local Set Primitive Projections.
 
-  Record OraMixin `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A,
-                      OraOrder A, OraOrderN A} := {
+  Record OraMixin `{!Dist A, !Equiv A, !PCore A, !Op A, !Valid A, !ValidN A,
+                      !OraOrder A, !OraOrderN A} := {
     (* setoids *)
     mixin_ora_pcore_increasing x cx : pcore x = Some cx → Increasing cx;
     mixin_ora_increasing_closed n x y : Increasing x → x ≼ₒ{n} y → Increasing y;
@@ -43,12 +43,12 @@ Section mixin.
     (* This follows from ora_extend + cmra_extend. *)
     mixin_ora_op_extend n x y1 y2 :
       ✓{n} x → y1 ⋅ y2 ≼ₒ{n} x →
-      ∃ z1 z2, z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2;
+      ∃ z1 z2, z1 ⋅ z2 ≼ₒ{Sᵢ n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2;
     mixin_ora_extend n x y :
-      ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{S n} x ∧ z ≡{n}≡ y;
+      ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{Sᵢ n} x ∧ z ≡{n}≡ y;
     (* OraOrder *)
     mixin_ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y;
-    mixin_ora_orderN_S n x y : x ≼ₒ{S n} y → x ≼ₒ{n} y;
+    mixin_ora_orderN_S n x y : x ≼ₒ{Sᵢ n} y → x ≼ₒ{n} y;
     mixin_ora_orderN_trans n : Transitive (OraorderN n);
     mixin_ora_orderN_op n x x' y : x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y;
     mixin_ora_validN_orderN n x y : ✓{n} x → y ≼ₒ{n} x → ✓{n} y;
@@ -59,7 +59,7 @@ Section mixin.
 End mixin.
 
 (** Bundled version *)
-Structure ora := Ora' {
+Structure ora {SI : sidx} := Ora' {
   ora_car :> Type;
   ora_equiv : Equiv ora_car;
   ora_dist : Dist ora_car;
@@ -73,7 +73,7 @@ Structure ora := Ora' {
   ora_cmra_mixin : CmraMixin ora_car;
   ora_mixin : OraMixin ora_car;
 }.
-Arguments Ora' _ {_ _ _ _ _ _ _ _} _ _ _.
+Arguments Ora' {_} _ {_ _ _ _ _ _ _ _} _ _ _.
 (* Given [m : OraMixin A], the notation [Ora A m] provides a smart
 constructor, which uses [ofe_mixin_of A] to infer the canonical OFE mixin of
 the type [A], so that it does not have to be given manually. *)
@@ -98,18 +98,18 @@ Add Printing Constructor ora.
 #[export] Hint Extern 0 (ValidN _) => eapply (@ora_validN _) : typeclass_instances.
 #[export] Hint Extern 0 (OraOrder _) => eapply (@ora_order _) : typeclass_instances.
 #[export] Hint Extern 0 (OraOrderN _) => eapply (@ora_orderN _) : typeclass_instances.
-Coercion ora_ofeO (A : ora) : ofe := Ofe A (ora_ofe_mixin A).
+Coercion ora_ofeO {SI : sidx} (A : ora) : ofe := Ofe A (ora_ofe_mixin A).
 Canonical Structure ora_ofeO.
-Coercion ora_cmraR (A : ora) : cmra := Cmra' A (ora_ofe_mixin A) (ora_cmra_mixin A).
+Coercion ora_cmraR {SI : sidx} (A : ora) : cmra := Cmra A (ora_cmra_mixin A).
 Canonical Structure ora_cmraR.
 
-Definition ora_mixin_of' A {Ac : ora} (f : Ac → A) : OraMixin Ac := ora_mixin Ac.
+Definition ora_mixin_of' {SI : sidx} A {Ac : ora} (f : Ac → A) : OraMixin Ac := ora_mixin Ac.
 Notation ora_mixin_of A :=
   ltac:(let H := eval hnf in (ora_mixin_of' A id) in exact H) (only parsing).
 
 (** Lifting properties from the mixin *)
 Section ora_mixin.
-  Context {A : ora}.
+  Context {SI : sidx} {A : ora}.
   Implicit Types x y : A.
   Global Instance ora_assoc : Assoc (≡@{A} ) (⋅) := cmra_assoc.
   Global Instance ora_comm : Comm (≡@{A} ) (⋅) := cmra_comm.
@@ -122,16 +122,16 @@ Section ora_mixin.
   Proof. apply (mixin_ora_pcore_monoN _ (ora_mixin A)). Qed.
   Lemma ora_op_extend n x y1 y2 :
     ✓{n} x → y1 ⋅ y2 ≼ₒ{n} x →
-    ∃ z1 z2, z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2.
+    ∃ z1 z2, z1 ⋅ z2 ≼ₒ{Sᵢ n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2.
   Proof. apply (mixin_ora_op_extend _ (ora_mixin A)). Qed.
   Lemma ora_extend n x y :
-      ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{S n} x ∧ z ≡{n}≡ y.
+      ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{Sᵢ n} x ∧ z ≡{n}≡ y.
   Proof. apply (mixin_ora_extend _ (ora_mixin A)). Qed.
   Lemma ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y.
   Proof. apply (mixin_ora_dist_orderN _ (ora_mixin A)). Qed.
-  Lemma ora_orderN_S n x y : x ≼ₒ{S n} y → x ≼ₒ{n} y.
+  Lemma ora_orderN_S n x y : x ≼ₒ{Sᵢ n} y → x ≼ₒ{n} y.
   Proof. apply (mixin_ora_orderN_S _ (ora_mixin A)). Qed.
-  Global Instance ora_orderN_trans n : Transitive (@OraorderN A _ n).
+  Global Instance ora_orderN_trans n : Transitive (@OraorderN SI A _ n).
   Proof. apply (mixin_ora_orderN_trans _ (ora_mixin A)). Qed.
   Lemma ora_orderN_op n x x' y : x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y.
   Proof. apply (mixin_ora_orderN_op _ (ora_mixin A)). Qed.
@@ -145,48 +145,49 @@ Section ora_mixin.
 End ora_mixin.
 
 
-Definition OraopM {A : ora} (x : A) (my : option A) :=
+Definition OraopM {SI : sidx} {A : ora} (x : A) (my : option A) :=
   match my with Some y => x ⋅ y | None => x end.
 Infix "⋅?" := OraopM (at level 50, left associativity) : stdpp_scope.
 
 (** * CoreId elements *)
-Class OraCoreId {A : ora} (x : A) := oracore_id : pcore x ≡ Some x.
-Arguments oracore_id {_} _ {_}.
-#[export] Hint Mode OraCoreId + ! : typeclass_instances.
-#[export] Instance: Params (@OraCoreId) 1 := {}.
+Class OraCoreId {SI : sidx} {A : ora} (x : A) := oracore_id : pcore x ≡ Some x.
+Arguments oracore_id {_ _} _ {_}.
+#[export] Hint Mode OraCoreId - + ! : typeclass_instances.
+#[export] Instance: Params (@OraCoreId) 2 := {}.
 
 (** * Exclusive elements (i.e., elements that cannot have a frame). *)
-Class OraExclusive {A : ora} (x : A) := oraexclusive0_l y : ✓{0} (x ⋅ y) → False.
-Arguments oraexclusive0_l {_} _ {_} _ _.
-#[export] Hint Mode OraExclusive + ! : typeclass_instances.
-#[export] Instance: Params (@OraExclusive) 1 := {}.
+Class OraExclusive {SI : sidx} {A : ora} (x : A) := oraexclusive0_l y : ✓{0ᵢ} (x ⋅ y) → False.
+Arguments oraexclusive0_l {_ _} _ {_} _ _.
+
+#[export] Hint Mode OraExclusive - + ! : typeclass_instances.
+#[export] Instance: Params (@OraExclusive) 2 := {}.
 
 (** * Cancelable elements. *)
-Class OraCancelable {A : ora} (x : A) :=
+Class OraCancelable {SI : sidx} {A : ora} (x : A) :=
   oracancelableN n y z : ✓{n}(x ⋅ y) → x ⋅ y ≡{n}≡ x ⋅ z → y ≡{n}≡ z.
-Arguments oracancelableN {_} _ {_} _ _ _ _.
-#[export] Hint Mode OraCancelable + ! : typeclass_instances.
-#[export] Instance: Params (@OraCancelable) 1 := {}.
+Arguments oracancelableN {_ _} _ {_} _ _ _ _.
+#[export] Hint Mode OraCancelable - + ! : typeclass_instances.
+#[export] Instance: Params (@OraCancelable) 2 := {}.
 
 (** * Identity-free elements. *)
-Class OraIdFree {A : ora} (x : A) :=
-  oraid_free0_r y : ✓{0}x → x ⋅ y ≡{0}≡ x → False.
-Arguments oraid_free0_r {_} _ {_} _ _.
-#[export] Hint Mode OraIdFree + ! : typeclass_instances.
-#[export] Instance: Params (@OraIdFree) 1 := {}.
+Class OraIdFree {SI : sidx} {A : ora} (x : A) :=
+  oraid_free0_r y : ✓{0ᵢ}x → x ⋅ y ≡{0ᵢ}≡ x → False.
+Arguments oraid_free0_r {_ _} _ {_} _ _.
+#[export] Hint Mode OraIdFree - + ! : typeclass_instances.
+#[export] Instance: Params (@OraIdFree) 2 := {}.
 
 (** * CMRAs whose core is total *)
 (** The function [core] may return a dummy when used on CMRAs without total
 core. *)
-Class OraTotal (A : ora) := ora_total (x : A) : is_Some (pcore x).
-#[export] Hint Mode OraTotal ! : typeclass_instances.
+Class OraTotal {SI : sidx} (A : ora) := ora_total (x : A) : is_Some (pcore x).
+#[export] Hint Mode OraTotal - ! : typeclass_instances.
 
-Record UoraMixin A `{Dist A, Equiv A, Unit A} := {
+Record UoraMixin {SI : sidx} A `{!Dist A, !Equiv A, !Unit A} := {
     (* needed to make emp timeless *)
-    mixin_uora_unit_discrete (y : A) : ε ≡{0}≡ y → ε ≡ y;
+    mixin_uora_unit_discrete (y : A) : ε ≡{0ᵢ}≡ y → ε ≡ y;
   }.
 
-Structure uora := Uora' {
+Structure uora {SI : sidx} := Uora' {
   uora_car :> Type;
   uora_equiv : Equiv uora_car;
   uora_dist : Dist uora_car;
@@ -203,7 +204,7 @@ Structure uora := Uora' {
   uora_ucmra_mixin : UcmraMixin uora_car;
   uora_mixin : UoraMixin uora_car;
 }.
-Arguments Uora' _ {_ _ _ _ _ _ _ _ _} _ _ _ _.
+Arguments Uora' {_} _ {_ _ _ _ _ _ _ _ _} _ _ _ _.
 Notation Uora A m n :=
   (Uora' A (ofe_mixin_of A%type) (cmra_mixin_of A%type) (ora_mixin_of A%type) m n) (only parsing).
 Arguments uora_car : simpl never.
@@ -222,44 +223,44 @@ Arguments uora_ucmra_mixin : simpl never.
 Arguments uora_mixin : simpl never.
 Add Printing Constructor uora.
 #[export] Hint Extern 0 (Unit _) => eapply (@uora_unit _) : typeclass_instances.
-Coercion uora_ofeO (A : uora) : ofe := Ofe A (uora_ofe_mixin A).
+Coercion uora_ofeO {SI : sidx} (A : uora) : ofe := Ofe A (uora_ofe_mixin A).
 Canonical Structure uora_ofeO.
-Coercion uora_oraR (A : uora) : ora :=
+Coercion uora_oraR {SI : sidx} (A : uora) : ora :=
   Ora' A (uora_ofe_mixin A) (uora_cmra_mixin A) (uora_ora_mixin A).
 Canonical Structure uora_oraR.
-Coercion uora_ucmraR (A : uora) : ucmra :=
+Coercion uora_ucmraR {SI : sidx} (A : uora) : ucmra :=
   Ucmra' A (uora_ofe_mixin A) (uora_cmra_mixin A) (uora_ucmra_mixin A).
 Canonical Structure uora_ucmraR.
 
 (** Lifting properties from the mixin *)
 Section uora_mixin.
-  Context {A : uora}.
+  Context {SI : sidx} {A : uora}.
   Implicit Types x y : A.
   Global Instance uora_unit_left_id : LeftId (≡) ε (@op A _).
   Proof. apply (mixin_ucmra_unit_left_id _ (ucmra_mixin A)). Qed.
 End uora_mixin.
 
 (** * Discrete CMRAs *)
-Class OraDiscrete (A : ora) := {
+Class OraDiscrete {SI : sidx} (A : ora) := {
   ora_discrete_ofe_discrete :: OfeDiscrete A;
-  ora_discrete_valid (x : A) : ✓{0} x → ✓ x;
-  ora_discrete_order (x y: A) : x ≼ₒ{0} y → x ≼ₒ y
+  ora_discrete_valid (x : A) : ✓{0ᵢ} x → ✓ x;
+  ora_discrete_order (x y: A) : x ≼ₒ{0ᵢ} y → x ≼ₒ y
 }.
-#[export] Hint Mode OraDiscrete ! : typeclass_instances.
+#[export] Hint Mode OraDiscrete - ! : typeclass_instances.
 
 (** * Morphisms *)
-Class OraMorphism {A B : ora} (f : A → B) := {
+Class OraMorphism {SI : sidx} {A B : ora} (f : A → B) := {
   ora_cmra_morphism :: CmraMorphism f;
   ora_morphism_orderN n x y : x ≼ₒ{n} y  → f x ≼ₒ{n} f y;
   ora_morphism_increasing x : Increasing x → Increasing (f x);
 }.
-Arguments ora_cmra_morphism {_ _} _ {_}.
-Arguments ora_morphism_orderN {_ _} _ {_} _ _ _.
-Arguments ora_morphism_increasing {_ _} _ _ _.
+Arguments ora_cmra_morphism {_ _ _} _ {_}.
+Arguments ora_morphism_orderN {_ _ _} _ {_} _ _ _.
+Arguments ora_morphism_increasing {_ _ _} _ _ _.
 
 (** * Properties **)
 Section ora.
-Context {A : ora}.
+Context {SI : sidx} {A : ora}.
 Implicit Types x y z : A.
 Implicit Types xs ys zs : list A.
 
@@ -267,7 +268,7 @@ Implicit Types xs ys zs : list A.
 Global Instance ora_order_trans: Transitive (@Oraorder A _).
 Proof.
   intros x y z Hxy Hyz; apply ora_order_orderN => n;
-    eapply (@ora_orderN_trans _ _ _ y); by eapply ora_order_orderN.
+    eapply (@ora_orderN_trans _ _ _ _ y); by eapply ora_order_orderN.
 Qed.
 Global Instance ora_pcore_ne' : NonExpansive (@pcore A _) := cmra_pcore_ne'.
 Lemma ora_pcore_proper x y cx :
@@ -281,8 +282,8 @@ Global Instance ora_op_ne' : NonExpansive2 (@op A _).
 Proof. intros n x1 x2 Hx y1 y2 Hy. by rewrite Hy (comm _ x1) Hx (comm _ y2). Qed.
 Global Instance ora_op_proper' : Proper ((≡) ==> (≡) ==> (≡)) (@op A _).
 Proof. apply (ne_proper_2 _). Qed.
-Global Instance ora_validN_ne' n : Proper (dist n ==> iff) (@validN A _ n) | 1 := cmra_validN_ne' n.
-Global Instance ora_validN_proper n : Proper ((≡) ==> iff) (@validN A _ n) | 1 := cmra_validN_proper n.
+Global Instance ora_validN_ne' n : Proper (dist n ==> iff) (@validN SI A _ n) | 1 := cmra_validN_ne' n.
+Global Instance ora_validN_proper n : Proper ((≡) ==> iff) (@validN SI A _ n) | 1 := cmra_validN_proper n.
 
 Lemma ora_order_op x x' y : x ≼ₒ x' → x ⋅ y ≼ₒ x' ⋅ y.
 Proof.
@@ -292,7 +293,7 @@ Qed.
 
 Global Instance ora_valid_proper : Proper ((≡) ==> iff) (@valid A _) := cmra_valid_proper.
 Global Instance ora_orderN_ne n :
-  Proper (dist n ==> dist n ==> iff) (@OraorderN A _ n) | 1.
+  Proper (dist n ==> dist n ==> iff) (@OraorderN SI A _ n) | 1.
 Proof.
   intros x x' Hx y y' Hy. split.
   - intros Hxy. etrans; first apply ora_dist_orderN; first by rewrite -Hx.
@@ -301,7 +302,7 @@ Proof.
     etrans; first done. by apply ora_dist_orderN.
 Qed.
 Global Instance ora_orderN_proper n :
-  Proper ((≡) ==> (≡) ==> iff) (@OraorderN A _ n) | 1.
+  Proper ((≡) ==> (≡) ==> iff) (@OraorderN SI A _ n) | 1.
 Proof.
   intros x x' Hx y y' Hy; revert Hx Hy; rewrite !equiv_dist=> Hx Hy.
   by rewrite (Hx n) (Hy n).
@@ -316,7 +317,7 @@ Proof.
   - eapply ora_orderN_proper; eauto.
 Qed.
 Global Instance ora_orderN_properN n :
-  Proper (flip (OraorderN n) ==> (OraorderN n) ==> impl) (@OraorderN A _ n) | 1.
+  Proper (flip (OraorderN n) ==> (OraorderN n) ==> impl) (@OraorderN SI A _ n) | 1.
 Proof.
   intros x x' Hx y y' Hy Hz.
   etrans; first apply Hx. etrans; eauto.
@@ -327,18 +328,18 @@ Proof.
   intros x x' Hx y y' Hy Hz.
   etrans; first apply Hx. etrans; eauto.
 Qed.
-Global Instance ora_opM_ne : NonExpansive2 (@OraopM A).
+Global Instance ora_opM_ne : NonExpansive2 (@OraopM SI A).
 Proof. destruct 2; by ofe_subst. Qed.
-Global Instance ora_opM_proper : Proper ((≡) ==> (≡) ==> (≡)) (@OraopM A).
+Global Instance ora_opM_proper : Proper ((≡) ==> (≡) ==> (≡)) (@OraopM SI A).
 Proof. destruct 2; by setoid_subst. Qed.
 
-Global Instance CoreId_proper : Proper ((≡) ==> iff) (@OraCoreId A).
+Global Instance CoreId_proper : Proper ((≡) ==> iff) (@OraCoreId SI A).
 Proof. solve_proper. Qed.
-Global Instance Exclusive_proper : Proper ((≡) ==> iff) (@OraExclusive A).
+Global Instance Exclusive_proper : Proper ((≡) ==> iff) (@OraExclusive SI A).
 Proof. intros x y Hxy. rewrite /OraExclusive. by setoid_rewrite Hxy. Qed.
-Global Instance Cancelable_proper : Proper ((≡) ==> iff) (@OraCancelable A).
+Global Instance Cancelable_proper : Proper ((≡) ==> iff) (@OraCancelable SI A).
 Proof. intros x y Hxy. rewrite /OraCancelable. by setoid_rewrite Hxy. Qed.
-Global Instance IdFree_proper : Proper ((≡) ==> iff) (@OraIdFree A).
+Global Instance IdFree_proper : Proper ((≡) ==> iff) (@OraIdFree SI A).
 Proof. intros x y Hxy. rewrite /OraIdFree. by setoid_rewrite Hxy. Qed.
 
 (** ** Op *)
@@ -389,11 +390,13 @@ Qed.
 
 (** ** Exclusive elements *)
 Lemma OraexclusiveN_l n x `{!OraExclusive x} y : ✓{n} (x ⋅ y) → False.
-Proof. intros. eapply (oraexclusive0_l x y), cmra_validN_le; eauto with lia. Qed.
+Proof. intros. eapply (oraexclusive0_l x y), cmra_validN_le; eauto with lia.
+apply SIdx.le_0_l.
+Qed.
 Lemma OraexclusiveN_r n x `{!OraExclusive x} y : ✓{n} (y ⋅ x) → False.
 Proof. rewrite comm. by apply OraexclusiveN_l. Qed.
 Lemma Oraexclusive_l x `{!OraExclusive x} y : ✓ (x ⋅ y) → False.
-Proof. by move /cmra_valid_validN /(_ 0) /oraexclusive0_l. Qed.
+Proof. by move /cmra_valid_validN /(_ 0ᵢ) /oraexclusive0_l. Qed.
 Lemma Oraexclusive_r x `{!OraExclusive x} y : ✓ (y ⋅ x) → False.
 Proof. rewrite comm. by apply Oraexclusive_l. Qed.
 Lemma OraexclusiveN_opM n x `{!OraExclusive x} my : ✓{n} (x ⋅? my) → my = None.
@@ -408,9 +411,9 @@ Proof. intros [? ->]. by apply Oraexclusive_l. Qed.
 Proof. intros Hyv [z ?]; setoid_subst; eauto using ora_valid_op_l. Qed.
 Lemma ora_validN_order n x y : ✓{n} y → x ≼ y → ✓{n} x.
 Proof. intros Hyv [z ?]; setoid_subst; eauto using ora_validN_op_l. Qed.*)
-
-Lemma ora_orderN_le n n' x y : x ≼ₒ{n} y → n' ≤ n → x ≼ₒ{n'} y.
-Proof. induction 2; auto using ora_orderN_S. Qed.
+Local Set Primitive Projections.
+Lemma ora_orderN_le n n' x y : x ≼ₒ{n} y → (n' ≤ n)%sidx → x ≼ₒ{n'} y.
+Proof. intros ? H. induction H.  induction 2; auto using ora_orderN_S. Qed.
 
 (* Lemma ora_pcore_order_op' x cx y : *)
 (*   pcore x ≡ Some cx → ∃ cxy, pcore (x ⋅ y) = Some cxy ∧ cx ≼ₒ cxy. *)
@@ -787,11 +790,11 @@ Section ora_total.
   Context (core_monoN : ∀ n x y, x ≼ₒ{n} y → core x ≼ₒ{n} core y).
   Context (op_extend : ∀ (n : nat) (x y1 y2 : A),
               ✓{n} x → y1 ⋅ y2 ≼ₒ{n} x →
-              ∃ z1 z2, z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2).
+              ∃ z1 z2, z1 ⋅ z2 ≼ₒ{Sᵢ n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2).
   Context (extend_order : ∀ (n : nat) (x y : A),
-              ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{S n} x ∧ z ≡{n}≡ y).
+              ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{Sᵢ n} x ∧ z ≡{n}≡ y).
   Context (dist_orderN : ∀ (n : nat) (x y : A), x ≡{n}≡ y → x ≼ₒ{n} y).
-  Context (orderN_S : ∀ (n : nat) (x y : A), x ≼ₒ{S n} y → x ≼ₒ{n} y).
+  Context (orderN_S : ∀ (n : nat) (x y : A), x ≼ₒ{Sᵢ n} y → x ≼ₒ{n} y).
   Context (OrderN_trans : ∀ n : nat, Transitive (OraorderN n)).
   Context (orderN_op : ∀ (n : nat) (x x' y : A), x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y).
   Context (validN_orderN : ∀ (n : nat) (x y : A), ✓{n} x → y ≼ₒ{n} x → ✓{n} y).
@@ -1819,7 +1822,7 @@ Section discrete_fun_ora.
     - intros n f f1 f2 Hf Hf12.
 (*      assert (FUN := λ x, ora_op_extend n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)). *)
       destruct (finite_choice (λ x (yy : B x * B x),
-        yy.1 ⋅ yy.2 ≼ₒ{S n} f x ∧ yy.1 ≡{n}≡ f1 x ∧ yy.2 ≡{n}≡ f2 x)) as [gg Hgg].
+        yy.1 ⋅ yy.2 ≼ₒ{Sᵢ n} f x ∧ yy.1 ≡{n}≡ f1 x ∧ yy.2 ≡{n}≡ f2 x)) as [gg Hgg].
       { intros x; simpl.
         destruct (ora_op_extend n (f x) (f1 x) (f2 x)) as (z1&z2&Hz);
           first (by apply Hf); first by apply Hf12.
@@ -1827,7 +1830,7 @@ Section discrete_fun_ora.
       exists (λ x, (gg x).1), (λ x, (gg x).2); naive_solver.
     - intros n f g Hf Hfg.
 (*      assert (FUN := λ x, ora_extend n (f x) (g x) (Hf x) (Hfg x)). *)
-      destruct (finite_choice (λ x (y : B x), y ≼ₒ{S n} f x ∧ y ≡{n}≡ g x))
+      destruct (finite_choice (λ x (y : B x), y ≼ₒ{Sᵢ n} f x ∧ y ≡{n}≡ g x))
         as [g' Hg'].
       { intros x; simpl.
         destruct (ora_extend n (f x) (g x)) as (z&Hz);
