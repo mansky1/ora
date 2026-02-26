@@ -48,6 +48,7 @@ Section mixin.
       ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{Sᵢ n} x ∧ z ≡{n}≡ y;
     (* OraOrder *)
     mixin_ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y;
+    (* FIXME Is this strong enough? *)
     mixin_ora_orderN_S n x y : x ≼ₒ{Sᵢ n} y → x ≼ₒ{n} y;
     mixin_ora_orderN_trans n : Transitive (OraorderN n);
     mixin_ora_orderN_op n x x' y : x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y;
@@ -412,8 +413,19 @@ Proof. intros Hyv [z ?]; setoid_subst; eauto using ora_valid_op_l. Qed.
 Lemma ora_validN_order n x y : ✓{n} y → x ≼ y → ✓{n} x.
 Proof. intros Hyv [z ?]; setoid_subst; eauto using ora_validN_op_l. Qed.*)
 Local Set Primitive Projections.
-Lemma ora_orderN_le n n' x y : x ≼ₒ{n} y → (n' ≤ n)%sidx → x ≼ₒ{n'} y.
-Proof. intros ? H. induction H.  induction 2; auto using ora_orderN_S. Qed.
+Lemma ora_orderN_le n n' x y : x ≼ₒ{n} y → n' ≤ n → x ≼ₒ{n'} y.
+Proof.
+  induction (SIdx.lt_wf n) as [n _ IH]; intros.
+  rewrite SIdx.le_lteq in H0.  destruct H0 as [?|Hlt].
+  2: { subst. done. }
+  (* case on whether n has a predecessor *)
+  destruct (SIdx.weak_case n).
+  - destruct s as [pred_n ->].
+    eapply (IH pred_n). 
+    { apply SIdx.lt_succ_diag_r. }
+    { by apply ora_orderN_S. }
+    rewrite -SIdx.lt_succ_r //.
+  - Admitted.
 
 (* Lemma ora_pcore_order_op' x cx y : *)
 (*   pcore x ≡ Some cx → ∃ cxy, pcore (x ⋅ y) = Some cxy ∧ cx ≼ₒ cxy. *)
@@ -491,7 +503,7 @@ Proof. by intros ?; apply ora_order_orderN. Qed.*)
 (** ** Total core *)
 Section total_core.
   Local Set Default Proof Using "Type*".
-  Context `{OraTotal A}.
+  Context `{!OraTotal A}.
 
   Lemma ora_core_l x : core x ⋅ x ≡ x.
   Proof.
@@ -551,7 +563,7 @@ Section total_core.
 
   Lemma ora_included_core x : core x ≼ x.
   Proof. by exists x; rewrite ora_core_l. Qed.
-  Global Instance ora_orderN_preorder n : PreOrder (@OraorderN A _ n).
+  Global Instance ora_orderN_preorder n : PreOrder (@OraorderN SI A _ n).
   Proof.
     split; [|apply _]; auto.
   Qed.
@@ -587,24 +599,24 @@ End total_core.
 (* Qed. *)
 
 (** ** Discrete *)
-Instance ora_cmra_discrete `{OraDiscrete A} : CmraDiscrete A.
+Instance ora_cmra_discrete `{!OraDiscrete A} : CmraDiscrete A.
 Proof.
-  destruct H; split; auto.
+  destruct OraDiscrete0; split; auto.
 Qed.
 
-Lemma ora_discrete_valid_iff `{OraDiscrete A} n x : ✓ x ↔ ✓{n} x.
+Lemma ora_discrete_valid_iff `{!OraDiscrete A} n x : ✓ x ↔ ✓{n} x.
 Proof.
   split; first by rewrite cmra_valid_validN.
-  eauto using ora_discrete_valid, cmra_validN_le with lia.
+  eauto using ora_discrete_valid, cmra_validN_le, SIdx.le_0_l.
 Qed.
-Lemma ora_discrete_valid_iff_0 `{OraDiscrete A} n x : ✓{0} x ↔ ✓{n} x.
+Lemma ora_discrete_valid_iff_0 `{!OraDiscrete A} n x : ✓{0ᵢ} x ↔ ✓{n} x.
 Proof. apply cmra_discrete_valid_iff_0. Qed.
-Lemma ora_discrete_included_iff `{OraDiscrete A} n x y : x ≼ₒ y ↔ x ≼ₒ{n} y.
+Lemma ora_discrete_included_iff `{!OraDiscrete A} n x y : x ≼ₒ y ↔ x ≼ₒ{n} y.
 Proof.
   split => ?; first by apply ora_order_orderN.
-  apply ora_discrete_order; eapply ora_orderN_le; first eauto; lia.
+  apply ora_discrete_order; eapply ora_orderN_le, SIdx.le_0_l; eauto.
 Qed.
-Lemma cmra_discrete_included_iff_0 `{OraDiscrete A} n x y : x ≼ₒ{0} y ↔ x ≼ₒ{n} y.
+Lemma cmra_discrete_included_iff_0 `{!OraDiscrete A} n x y : x ≼ₒ{0ᵢ} y ↔ x ≼ₒ{n} y.
 Proof. by rewrite -!ora_discrete_included_iff. Qed.
 
 (* (** Cancelable elements  *) *)
@@ -660,11 +672,11 @@ End ora.
 
 (** * Properties about CMRAs with a unit element **)
 Section uora.
-  Context {A : uora}.
+  Context {SI: sidx} {A : uora}.
   Implicit Types x y z : A.
 
   Lemma uora_unit_validN n : ✓{n} (ε:A).
-  Proof. apply (@cmra_valid_validN (ora_cmraR _)), ucmra_unit_valid. Qed.
+  Proof. apply (@cmra_valid_validN _ (ora_cmraR _)), ucmra_unit_valid. Qed.
   Global Instance uora_unit_right_id : RightId (≡) ε (@op A _).
   Proof. apply ucmra_unit_right_id. Qed.
   Global Instance uora_unit_core_id : OraCoreId (ε:A).
@@ -783,22 +795,22 @@ End uora_leibniz.*)
 
 (** * Constructing an ORA with total core *)
 Section ora_total.
-  Context A `{!Dist A, !Equiv A, !PCore A, !Op A, !Valid A, !ValidN A, OraOrder A, OraOrderN A}.
+  Context {SI: sidx} A `{!Dist A, !Equiv A, !PCore A, !Op A, !Valid A, !ValidN A, !OraOrder A, !OraOrderN A}.
   Context (total : ∀ x : A, is_Some (pcore x)).
   Context (core_increasing : ∀ x, Increasing (core x)).
   Context (increasing_closed : ∀ n x y, Increasing x → x ≼ₒ{n} y → Increasing y).
   Context (core_monoN : ∀ n x y, x ≼ₒ{n} y → core x ≼ₒ{n} core y).
-  Context (op_extend : ∀ (n : nat) (x y1 y2 : A),
+  Context (op_extend : ∀ n (x y1 y2 : A),
               ✓{n} x → y1 ⋅ y2 ≼ₒ{n} x →
               ∃ z1 z2, z1 ⋅ z2 ≼ₒ{Sᵢ n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2).
-  Context (extend_order : ∀ (n : nat) (x y : A),
+  Context (extend_order : ∀ n (x y : A),
               ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{Sᵢ n} x ∧ z ≡{n}≡ y).
-  Context (dist_orderN : ∀ (n : nat) (x y : A), x ≡{n}≡ y → x ≼ₒ{n} y).
-  Context (orderN_S : ∀ (n : nat) (x y : A), x ≼ₒ{Sᵢ n} y → x ≼ₒ{n} y).
-  Context (OrderN_trans : ∀ n : nat, Transitive (OraorderN n)).
-  Context (orderN_op : ∀ (n : nat) (x x' y : A), x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y).
-  Context (validN_orderN : ∀ (n : nat) (x y : A), ✓{n} x → y ≼ₒ{n} x → ✓{n} y).
-  Context (order_orderN : ∀ x y : A, x ≼ₒ y ↔ (∀ n : nat, x ≼ₒ{n} y)).
+  Context (dist_orderN : ∀ n (x y : A), x ≡{n}≡ y → x ≼ₒ{n} y).
+  Context (orderN_S : ∀ n (x y : A), x ≼ₒ{Sᵢ n} y → x ≼ₒ{n} y).
+  Context (OrderN_trans : ∀ n, Transitive (OraorderN n)).
+  Context (orderN_op : ∀ n (x x' y : A), x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y).
+  Context (validN_orderN : ∀ n (x y : A), ✓{n} x → y ≼ₒ{n} x → ✓{n} y).
+  Context (order_orderN : ∀ x y : A, x ≼ₒ y ↔ (∀ n, x ≼ₒ{n} y)).
   Context (pcore_order_op : ∀ x cx y : A,
               pcore x ≡ Some cx →
               ∃ cxy : A, pcore (x ⋅ y) ≡ Some cxy ∧ cx ≼ₒ cxy).
@@ -813,11 +825,11 @@ Section ora_total.
 End ora_total.
 
 (** * Properties about morphisms *)
-#[export] Instance ora_morphism_id {A : ora} : OraMorphism (@id A).
+#[export] Instance ora_morphism_id {SI: sidx} {A : ora} : OraMorphism (@id A).
 Proof. split=>//=. apply cmra_morphism_id. Qed.
-#[export] Instance ora_morphism_proper {A B : ora} (f : A → B) `{!OraMorphism f} :
+#[export] Instance ora_morphism_proper {SI: sidx} {A B : ora} (f : A → B) `{!OraMorphism f} :
   Proper ((≡) ==> (≡)) f := ne_proper _.
-#[export] Instance ora_morphism_compose {A B C : ora} (f : A → B) (g : B → C) :
+#[export] Instance ora_morphism_compose {SI: sidx} {A B C : ora} (f : A → B) (g : B → C) :
   OraMorphism f → OraMorphism g → OraMorphism (g ∘ f).
 Proof.
   split.
@@ -830,7 +842,7 @@ Qed.
 
 Section ora_morphism.
   Local Set Default Proof Using "Type*".
-  Context {A B : ora} (f : A → B) `{!OraMorphism f}.
+  Context {SI: sidx} {A B : ora} (f : A → B) `{!OraMorphism f}.
 
   Lemma ora_morphism_validN n (x : A) : ✓{n} x → ✓{n} f x.
   Proof. apply cmra_morphism_validN, _. Qed.
@@ -853,7 +865,7 @@ Section ora_morphism.
 End ora_morphism.
 
 (** Functors *)
-Record OrarFunctor := OraRFunctor {
+Record OrarFunctor {SI: sidx} := OraRFunctor {
   orarFunctor_car : ∀ A `{!Cofe A} B `{!Cofe B}, ora;
   orarFunctor_map `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → orarFunctor_car A1 B1 -n> orarFunctor_car A2 B2;
@@ -869,28 +881,29 @@ Record OrarFunctor := OraRFunctor {
     OraMorphism (orarFunctor_map fg)
 }.
 #[export] Existing Instances orarFunctor_map_ne orarFunctor_mor.
-#[export] Instance: Params (@orarFunctor_map) 5 := {}.
+#[export] Instance: Params (@orarFunctor_map) 10 := {}.
 
 Declare Scope orarFunctor_scope.
 Delimit Scope orarFunctor_scope with ORF.
 Bind Scope orarFunctor_scope with rFunctor.
 
-Class OrarFunctorContractive (F : OrarFunctor) :=
-  orarFunctor_map_contractive `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} ::
-    Contractive (@orarFunctor_map F A1 _ A2 _ B1 _ B2 _).
+Class OrarFunctorContractive {SI: sidx} (F : OrarFunctor) :=
+  #[global] orarFunctor_map_contractive `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} ::
+    Contractive (@orarFunctor_map SI F A1 _ A2 _ B1 _ B2 _).
+Global Hint Mode rFunctorContractive - ! : typeclass_instances.
 
-Definition OrarFunctor_apply (F: OrarFunctor) (A: ofe) `{!Cofe A} : ora := orarFunctor_car F A A.
+Definition OrarFunctor_apply {SI: sidx} (F: OrarFunctor) (A: ofe) `{!Cofe A} : ora := orarFunctor_car F A A.
 Coercion OrarFunctor_apply : OrarFunctor >-> Funclass.
 
-Program Definition OraconstRF (B : ora) : OrarFunctor :=
+Program Definition OraconstRF {SI: sidx} (B : ora) : OrarFunctor :=
   {| orarFunctor_car A1 _ A2 _ := B; orarFunctor_map A1 _ A2 _ B1 _ B2 _ f := cid |}.
 Solve Obligations with done.
 Coercion OraconstRF : ora >-> OrarFunctor.
 
-#[export] Instance OraconstRF_contractive B : OrarFunctorContractive (OraconstRF B).
+#[export] Instance OraconstRF_contractive {SI: sidx} B : OrarFunctorContractive (OraconstRF B).
 Proof. rewrite /OrarFunctorContractive; apply _. Qed.
 
-Record uorarFunctor := UOraRFunctor {
+Record uorarFunctor {SI: sidx} := UOraRFunctor {
   uorarFunctor_car : ∀ A `{!Cofe A} B `{!Cofe B}, uora;
   uorarFunctor_map `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → uorarFunctor_car A1 B1 -n> uorarFunctor_car A2 B2;
@@ -906,37 +919,38 @@ Record uorarFunctor := UOraRFunctor {
     OraMorphism (uorarFunctor_map fg)
 }.
 #[export] Existing Instances uorarFunctor_map_ne uorarFunctor_mor.
-#[export] Instance: Params (@uorarFunctor_map) 5 := {}.
+#[export] Instance: Params (@uorarFunctor_map) 10 := {}.
 
 Declare Scope uorarFunctor_scope.
 Delimit Scope uorarFunctor_scope with UORF.
 Bind Scope uorarFunctor_scope with uorarFunctor.
 
-Class uorarFunctorContractive (F : uorarFunctor) :=
-  uorarFunctor_map_contractive `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} ::
-    Contractive (@uorarFunctor_map F A1 _ A2 _ B1 _ B2 _).
+Class uorarFunctorContractive {SI: sidx} (F : uorarFunctor) :=
+  #[global] uorarFunctor_map_contractive `{!Cofe A1, !Cofe A2, !Cofe B1, !Cofe B2} ::
+    Contractive (@uorarFunctor_map _ F A1 _ A2 _ B1 _ B2 _).
+Global Hint Mode urFunctorContractive - ! : typeclass_instances.
 
-Definition uorarFunctor_apply (F: uorarFunctor) (A: ofe) `{!Cofe A} : uora :=
+Definition uorarFunctor_apply {SI: sidx} (F: uorarFunctor) (A: ofe) `{!Cofe A} : uora :=
   uorarFunctor_car F A A.
 
-Program Definition OraconstURF (B : uora) : uorarFunctor :=
+Program Definition OraconstURF {SI: sidx} (B : uora) : uorarFunctor :=
   {| uorarFunctor_car A1 _ A2 _ := B; uorarFunctor_map A1 _ A2 _ B1 _ B2 _ f := cid |}.
 Solve Obligations with done.
 Coercion OraconstURF : uora >-> uorarFunctor.
 
-#[export] Instance OraconstURF_contractive B : uorarFunctorContractive (OraconstURF B).
+#[export] Instance OraconstURF_contractive {SI: sidx} B : uorarFunctorContractive (OraconstURF B).
 Proof. rewrite /uorarFunctorContractive; apply _. Qed.
 
 (** * Transporting a CMRA equality *)
-Definition ora_transport {A B : ora} (H : A = B) (x : A) : B :=
+Definition ora_transport {SI: sidx} {A B : ora} (H : A = B) (x : A) : B :=
   eq_rect A id x _ H.
 
-Lemma ora_transport_trans {A B C : ora} (H1 : A = B) (H2 : B = C) x :
+Lemma ora_transport_trans {SI: sidx} {A B C : ora} (H1 : A = B) (H2 : B = C) x :
   ora_transport H2 (ora_transport H1 x) = ora_transport (eq_trans H1 H2) x.
 Proof. by destruct H2. Qed.
 
 Section ora_transport.
-  Context {A B : ora} (H : A = B).
+  Context {SI: sidx} {A B : ora} (H : A = B).
   Notation T := (ora_transport H).
   Global Instance ora_transport_ne : NonExpansive T.
   Proof. by intros ???; destruct H. Qed.
@@ -982,10 +996,10 @@ End mixin.
 
 Section discrete.
   Local Set Default Proof Using "Type*".
-  Context `{Equiv A, OraOrder A, PCore A, Op A, Valid A} (Heq : @Equivalence A (≡)).
+  Context {SI: sidx} {A: Type} `{Equiv A, OraOrder A, PCore A, Op A, Valid A} (Heq : @Equivalence A (≡)).
   Context (dora_mix : DORAMixin A).
   Existing Instances discrete_dist.
-  Global Instance discrete_orderN : OraOrderN A := λ _ x y, x ≼ₒ y.
+  Global Instance discrete_orderN  : OraOrderN A := λ _ x y, x ≼ₒ y.
 
   Instance discrete_validN : ValidN A := λ n x, ✓ x.
   Definition discrete_ora_mixin : OraMixin A.
@@ -993,7 +1007,8 @@ Section discrete.
     destruct dora_mix; split; eauto; try done.
     - intros n x y Hx Hxy z. etrans; first apply Hx.
       eapply dora_order_op; eauto.
-    - intros x; split; first done. by move=> /(_ 0).
+    - intros x; split; first done.
+      by move => /(_ 0ᵢ).
   Qed.
 
   Context (ra_mix : RAMixin A).
@@ -1034,6 +1049,7 @@ End dora_total.
 
 (** ** CMRA for the unit type *)
 Section unit.
+  Context {SI: sidx}.
   Instance unit_valid : Valid () := λ x, True.
   Instance unit_validN : ValidN () := λ n x, True.
   Instance unit_pcore : PCore () := λ x, Some x.
@@ -1063,13 +1079,14 @@ End unit.
 
 (** ** Natural numbers *)
 Section nat.
+  Context {SI: sidx}.
   Instance nat_valid : Valid nat := λ x, True.
   Instance nat_validN : ValidN nat := λ n x, True.
   Instance nat_pcore : PCore nat := λ x, Some 0.
   Instance nat_op : Op nat := plus.
   Instance nat_order : OraOrder nat := le.
   Definition nat_op_plus x y : x ⋅ y = x + y := eq_refl.
-  Lemma nat_order_le (x y : nat) : x ≼ₒ y ↔ x ≤ y.
+  Lemma nat_order_le (x y : nat) : x ≼ₒ y ↔ (x ≤ y)%nat.
   Proof. trivial. Qed.
   Lemma nat_dora_mixin : DORAMixin nat.
   Proof.
@@ -1108,6 +1125,7 @@ End nat.
 Definition mnat := nat.
 
 Section mnat.
+  Context {SI: sidx}.
   Instance mnat_unit : Unit mnat := 0.
   Instance mnat_valid : Valid mnat := λ x, True.
   Instance mnat_validN : ValidN mnat := λ n x, True.
@@ -1115,7 +1133,7 @@ Section mnat.
   Instance mnat_op : Op mnat := Nat.max.
   Instance mnat_order : OraOrder mnat := le.
   Definition mnat_op_max x y : x ⋅ y = x `max` y := eq_refl.
-  Lemma mnat_order_le (x y : mnat) : x ≼ₒ y ↔ x ≤ y.
+  Lemma mnat_order_le (x y : mnat) : x ≼ₒ y ↔ (x ≤ y)%nat.
   Proof. done. Qed.
 
   Lemma mnat_ra_mixin : RAMixin mnat.
@@ -1156,6 +1174,7 @@ End mnat.
 
 (** ** Positive integers. *)
 Section positive.
+  Context {SI: sidx}.
   Instance pos_valid : Valid positive := λ x, True.
   Instance pos_validN : ValidN positive := λ n x, True.
   Instance pos_pcore : PCore positive := λ x, None.
@@ -1189,7 +1208,7 @@ End positive.
 
 (** Product *)
 Section prod.
-  Context {A B : ora}.
+  Context {SI: sidx} {A B : ora}.
   Local Arguments pcore _ _ !_ /.
   Local Arguments prod_pcore_instance _ _ !_/.
   Local Arguments cmra_car _ /.
@@ -1301,10 +1320,10 @@ Section prod.
   Proof. move=>? [??] [_ ?] [_ /=?]. eauto. Qed.
 End prod.
 
-Arguments prodR : clear implicits.
+Arguments prodR {_} _ _.
 
 Section prod_unit.
-  Context {A B : uora}.
+  Context {SI: sidx} {A B : uora}.
 
   Instance prod_unit `{Unit A, Unit B} : Unit (A * B) := (ε, ε).
   Lemma prod_ucmra_mixin : UcmraMixin (A * B).
@@ -1316,7 +1335,7 @@ Section prod_unit.
   Qed.
   Lemma prod_uora_mixin : UoraMixin (A * B).
   Proof. split. intros ? [? ?]. split; by apply uora_unit_discrete. Qed.
-  Canonical Structure prodUR := Uora' (prod A B) (ofe_mixin_of (A * B)) (@prod_cmra_mixin A B) prod_ora_mixin prod_ucmra_mixin prod_uora_mixin.
+  Canonical Structure prodUR := Uora' (prod A B) (ofe_mixin_of (A * B)) (@prod_cmra_mixin _ A B) prod_ora_mixin prod_ucmra_mixin prod_uora_mixin.
 
   Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ε) ⋅ (ε, y).
   Proof. by rewrite pair_op left_id right_id. Qed.
@@ -1326,9 +1345,9 @@ Section prod_unit.
   Proof. unfold_leibniz. apply pair_split. Qed.
 End prod_unit.
 
-Arguments prodUR : clear implicits.
+Arguments prodUR {_} _ _.
 
-#[export] Instance prod_map_cmra_morphism {A A' B B' : ora} (f : A → A') (g : B → B') :
+#[export] Instance prod_map_cmra_morphism {SI: sidx} {A A' B B' : ora} (f : A → A') (g : B → B') :
   OraMorphism f → OraMorphism g → OraMorphism (prod_map f g).
 Proof.
   split; first apply _.
@@ -1340,22 +1359,22 @@ Proof.
       { intros z. destruct (Hx (x.1, z)); simpl in *; auto. }
 Qed.
 
-Program Definition prodRF (F1 F2 : OrarFunctor) : OrarFunctor := {|
+Program Definition prodRF {SI: sidx} (F1 F2 : OrarFunctor) : OrarFunctor := {|
   orarFunctor_car A _ B _ := prodR (orarFunctor_car F1 A B) (orarFunctor_car F2 A B);
   orarFunctor_map A1 _ A2 _ B1 _ B2 _ fg :=
     prodO_map (orarFunctor_map F1 fg) (orarFunctor_map F2 fg)
 |}.
 Next Obligation.
-  intros F1 F2 A1 ? A2 ? B1 ? B2 ? n ???. by apply prodO_map_ne; apply orarFunctor_map_ne.
+  intros ? F1 F2 A1 ? A2 ? B1 ? B2 ? n ???. by apply prodO_map_ne; apply orarFunctor_map_ne.
 Qed.
-Next Obligation. by intros F1 F2 A ? B ? [??]; rewrite /= !orarFunctor_map_id. Qed.
+Next Obligation. by intros ? F1 F2 A ? B ? [??]; rewrite /= !orarFunctor_map_id. Qed.
 Next Obligation.
-  intros F1 F2 A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' [??]; simpl.
+  intros ? F1 F2 A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' [??]; simpl.
   by rewrite !orarFunctor_map_compose.
 Qed.
 Notation "F1 * F2" := (prodRF F1%ORF F2%ORF) : rFunctor_scope.
 
-#[export] Instance prodRF_contractive F1 F2 :
+#[export] Instance prodRF_contractive {SI: sidx} F1 F2 :
   OrarFunctorContractive F1 → OrarFunctorContractive F2 →
   OrarFunctorContractive (prodRF F1 F2). 
 Proof.
@@ -1363,22 +1382,22 @@ Proof.
     by apply prodO_map_ne; apply orarFunctor_map_contractive.
 Qed.
 
-Program Definition prodURF (F1 F2 : uorarFunctor) : uorarFunctor := {|
+Program Definition prodURF {SI: sidx} (F1 F2 : uorarFunctor) : uorarFunctor := {|
   uorarFunctor_car A _ B _ := prodUR (uorarFunctor_car F1 A B) (uorarFunctor_car F2 A B);
   uorarFunctor_map A1 _ A2 _ B1 _ B2 _ fg :=
     prodO_map (uorarFunctor_map F1 fg) (uorarFunctor_map F2 fg)
 |}.
 Next Obligation.
-  intros F1 F2 A1 ? A2 ? B1 ? B2 ? n ???. by apply prodO_map_ne; apply uorarFunctor_map_ne.
+  intros ? F1 F2 A1 ? A2 ? B1 ? B2 ? n ???. by apply prodO_map_ne; apply uorarFunctor_map_ne.
 Qed.
-Next Obligation. by intros F1 F2 A ? B ? [??]; rewrite /= !uorarFunctor_map_id. Qed.
+Next Obligation. by intros ? F1 F2 A ? B ? [??]; rewrite /= !uorarFunctor_map_id. Qed.
 Next Obligation.
-  intros F1 F2 A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' [??]; simpl.
+  intros ? F1 F2 A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' [??]; simpl.
   by rewrite !uorarFunctor_map_compose.
 Qed.
 Notation "F1 * F2" := (prodURF F1%UORF F2%UORF) : urFunctor_scope.
 
-#[export] Instance prodURF_contractive F1 F2 :
+#[export] Instance prodURF_contractive {SI: sidx} F1 F2 :
   uorarFunctorContractive F1 → uorarFunctorContractive F2 →
   uorarFunctorContractive (prodURF F1 F2).
 Proof.
@@ -1388,7 +1407,7 @@ Qed.
 
 (** ** CMRA for the option type *)
 Section option.
-  Context {A : ora}.
+  Context {SI: sidx} {A : ora}.
   Implicit Types a b : A.
   Implicit Types ma mb : option A.
   Local Arguments core _ _ !_ /.
@@ -1436,7 +1455,7 @@ Section option.
   Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _.
   Definition Some_validN a n : ✓{n} Some a ↔ ✓{n} a := reflexivity _.
   Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
-  Lemma Some_core `{OraTotal A} a : Some (core a) = core (Some a).
+  Lemma Some_core `{!OraTotal A} a : Some (core a) = core (Some a).
   Proof. rewrite /core /=. by destruct (ora_total a) as [? ->]. Qed.
   Lemma Some_op_opM a ma : Some a ⋅ ma = Some (a ⋅? ma).
   Proof. by destruct ma. Qed.
@@ -1569,8 +1588,8 @@ Section option.
       intros; eapply ora_validN_orderN; eauto.
     - intros [x|] [y|]; try done.
       * apply ora_order_orderN.
-      * split; auto. intros Hx; apply (Hx 0).
-      * split; auto. intros Hx; apply (Hx 0).
+      * split; auto. intros Hx; apply (Hx 0ᵢ).
+      * split; auto. intros Hx; apply (Hx 0ᵢ).
     - intros [x|] [cx|] [y|] Hcx; try done; simpl in *; simplify_eq.
       + inversion Hcx; subst.
         destruct (ora_pcore_order_op x cx y) as [z [Hz Hz']]; auto.
@@ -1646,9 +1665,9 @@ Section option.
   Lemma Some_order_2 a b : a ≼ₒ b → Some a ≼ₒ Some b.
   Proof. rewrite Some_order; eauto. Qed.
 
-  Lemma Some_orderN_total `{OraTotal A} n a b : Some a ≼ₒ{n} Some b ↔ a ≼ₒ{n} b.
+  Lemma Some_orderN_total `{!OraTotal A} n a b : Some a ≼ₒ{n} Some b ↔ a ≼ₒ{n} b.
   Proof. by rewrite Some_orderN. Qed.
-  Lemma Some_order_total `{OraTotal A} a b : Some a ≼ₒ Some b ↔ a ≼ₒ b.
+  Lemma Some_order_total `{!OraTotal A} a b : Some a ≼ₒ Some b ↔ a ≼ₒ b.
   Proof. by rewrite Some_order. Qed.
 
   Lemma Some_includedN_exclusive n a `{!OraExclusive a} b :
@@ -1673,16 +1692,16 @@ Section option.
   Proof.
     intros Hirr ?? [b|] [c|] ? EQ; inversion_clear EQ.
     - constructor. by apply (oracancelableN a).
-    - destruct (Hirr b); [|eauto using dist_le with lia].
-      by eapply (cmra_validN_op_l 0 a b), (cmra_validN_le n); last lia.
-    - destruct (Hirr c); [|symmetry; eauto using dist_le with lia].
-      by eapply (cmra_validN_le n); last lia.
+    - destruct (Hirr b); [|eauto using dist_le, SIdx.le_0_l].
+      by apply (cmra_validN_op_l 0ᵢ a b), (cmra_validN_le n), SIdx.le_0_l.
+    - destruct (Hirr c); [|symmetry; eauto using dist_le, SIdx.le_0_l].
+      by eapply (cmra_validN_le n), SIdx.le_0_l.
     - done.
   Qed.
 End option.
 
-Arguments optionR : clear implicits.
-Arguments optionUR : clear implicits.
+Arguments optionR {_} _.
+Arguments optionUR {_} _.
 
 (* Section option_prod. *)
 (*   Context {A B : ora}. *)
@@ -1710,7 +1729,7 @@ Arguments optionUR : clear implicits.
 (*   Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total b1). Qed. *)
 (* End option_prod. *)
 
-#[export] Instance option_fmap_ora_morphism {A B : ora} (f: A → B) `{!OraMorphism f} :
+#[export] Instance option_fmap_ora_morphism {SI: sidx} {A B : ora} (f: A → B) `{!OraMorphism f} :
   OraMorphism (fmap f : option A → option B).
 Proof.
   split; first apply _.
@@ -1724,45 +1743,45 @@ Proof.
     + intros ?; apply None_increasing.
 Qed.
 
-Program Definition optionRF (F : OrarFunctor) : OrarFunctor := {|
+Program Definition optionRF {SI: sidx} (F : OrarFunctor) : OrarFunctor := {|
   orarFunctor_car A _ B _ := optionR (orarFunctor_car F A B);
   orarFunctor_map A1 _ A2 _ B1 _ B2 _ fg := optionO_map (orarFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros F A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply optionO_map_ne, orarFunctor_map_ne.
+  by intros ? F A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply optionO_map_ne, orarFunctor_map_ne.
 Qed.
 Next Obligation.
-  intros F A ? B ? x. rewrite /= -{2}(option_fmap_id x).
+  intros ? F A ? B ? x. rewrite /= -{2}(option_fmap_id x).
   apply option_fmap_equiv_ext=>y; apply orarFunctor_map_id.
 Qed.
 Next Obligation.
-  intros F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x. rewrite /= -option_fmap_compose.
+  intros ? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x. rewrite /= -option_fmap_compose.
   apply option_fmap_equiv_ext=>y; apply orarFunctor_map_compose.
 Qed.
 
-#[export] Instance optionRF_contractive F :
+#[export] Instance optionRF_contractive {SI: sidx} F :
   OrarFunctorContractive F → OrarFunctorContractive (optionRF F).
 Proof.
   by intros ? A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply optionO_map_ne, orarFunctor_map_contractive.
 Qed.
 
-Program Definition optionURF (F : OrarFunctor) : uorarFunctor := {|
+Program Definition optionURF {SI: sidx} (F : OrarFunctor) : uorarFunctor := {|
   uorarFunctor_car A _ B _ := optionUR (orarFunctor_car F A B);
   uorarFunctor_map A1 _ A2 _ B1 _ B2 _ fg := optionO_map (orarFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros F A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply optionO_map_ne, orarFunctor_map_ne.
+  by intros ? F A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply optionO_map_ne, orarFunctor_map_ne.
 Qed.
 Next Obligation.
-  intros F A ? B ? x. rewrite /= -{2}(option_fmap_id x).
+  intros ? F A ? B ? x. rewrite /= -{2}(option_fmap_id x).
   apply option_fmap_equiv_ext=>y; apply orarFunctor_map_id.
 Qed.
 Next Obligation.
-  intros F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x. rewrite /= -option_fmap_compose.
+  intros ? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x. rewrite /= -option_fmap_compose.
   apply option_fmap_equiv_ext=>y; apply orarFunctor_map_compose.
 Qed.
 
-#[export] Instance optionURF_contractive F :
+#[export] Instance optionURF_contractive {SI: sidx} F :
   OrarFunctorContractive F → uorarFunctorContractive (optionURF F).
 Proof.
   by intros ? A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply optionO_map_ne, orarFunctor_map_contractive.
@@ -1770,7 +1789,7 @@ Qed.
 
 (* Dependently-typed functions over a discrete domain *)
 Section discrete_fun_ora.
-  Context {A : Type} `{Hfin : Finite A} {B : A → uora}.
+  Context {SI: sidx} {A : Type} `{Hfin : Finite A} {B : A → uora}.
   Implicit Types f g : discrete_fun B.
 
   Instance discrete_fun_op : Op (discrete_fun B) := λ f g x, f x ⋅ g x.
@@ -1878,11 +1897,11 @@ Section discrete_fun_ora.
   Proof. intros ? f Hf x. by apply: discrete. Qed.
 End discrete_fun_ora.
 
-Arguments discrete_funR {_ _ _} _.
-Arguments discrete_funUR {_ _ _} _.
+Arguments discrete_funR {_ _ _ _} _.
+Arguments discrete_funUR {_ _ _ _} _.
 
 Global Instance discrete_fun_map_ora_morphism
-    `{Finite A} {B1 B2 : A → uora} (f : ∀ x, B1 x → B2 x) :
+   {SI: sidx} `{Finite A} {B1 B2 : A → uora} (f : ∀ x, B1 x → B2 x) :
   (∀ x, OraMorphism (f x)) → OraMorphism (discrete_fun_map f).
 Proof.
   intros Ho; split.
@@ -1894,25 +1913,25 @@ Proof.
     by apply discrete_fun_increasing.
 Qed.
 
-Program Definition discrete_funURF `{Finite C} (F : C → uorarFunctor) : uorarFunctor := {|
+Program Definition discrete_funURF {SI: sidx} `{Finite C} (F : C → uorarFunctor) : uorarFunctor := {|
   uorarFunctor_car A _ B _ := discrete_funUR (λ c, uorarFunctor_car (F c) A B);
   uorarFunctor_map A1 _ A2 _ B1 _ B2 _ fg := discrete_funO_map (λ c, uorarFunctor_map (F c) fg)
 |}.
 Next Obligation.
-  intros C ?? F A1 ? A2 ? B1 ? B2 ? n ?? g.
+  intros ? C ?? F A1 ? A2 ? B1 ? B2 ? n ?? g.
   by apply discrete_funO_map_ne=>?; apply uorarFunctor_map_ne.
 Qed.
 Next Obligation.
-  intros C ?? F A ? B ? g; simpl. rewrite -{2}(discrete_fun_map_id g).
+  intros ? C ?? F A ? B ? g; simpl. rewrite -{2}(discrete_fun_map_id g).
   apply discrete_fun_map_ext=> y; apply uorarFunctor_map_id.
 Qed.
 Next Obligation.
-  intros C ?? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f1 f2 f1' f2' g. rewrite /=-discrete_fun_map_compose.
+  intros ? C ?? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f1 f2 f1' f2' g. rewrite /=-discrete_fun_map_compose.
   apply discrete_fun_map_ext=>y; apply uorarFunctor_map_compose.
 Qed.
-Global Instance discrete_funURF_contractive `{Finite C} (F : C → uorarFunctor) :
+Global Instance discrete_funURF_contractive {SI: sidx} `{Finite C} (F : C → uorarFunctor) :
   (∀ c, uorarFunctorContractive (F c)) → uorarFunctorContractive (discrete_funURF F).
 Proof.
-  intros ?? A1 ? A2 ? B1 ? B2 ? n ?? g.
+  intros ??? A1 ? A2 ? B1 ? B2 ? n ??.
   by apply discrete_funO_map_ne=>c; apply uorarFunctor_map_contractive.
 Qed.
