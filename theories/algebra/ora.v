@@ -2,6 +2,7 @@ From iris.algebra Require Export ofe monoid cmra numbers.
 From stdpp Require Import finite.
 Set Default Proof Using "Type".
 
+Local Open Scope sidx_scope.
 (* The order of an ordered RA quantifies over [A], not [option A].  This means
    we do not get reflexivity.  However, if we used [option A], the following
    would no longer hold:
