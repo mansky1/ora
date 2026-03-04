@@ -134,14 +134,14 @@ Proof.
     eexists; split; [constructor; reflexivity|].
     inversion Hcx as [?? Heq|]; subst.
     intros i.
-    Fail rewrite -Heq. (* FIXME *)
-    (* rewrite -Heq !lookup_omap lookup_op.
+    change (Oraorder ((cx !! i) : optionR A) (omap pcore (x ⋅ y) !! i)).
+    eapply ora_order_proper; [symmetry; apply Heq | reflexivity |].
+    rewrite !lookup_omap lookup_op.
     edestruct (ora_pcore_order_op (x !! i)) as (? & Hcore & ?).
     { constructor; reflexivity. }
     inversion Hcore as [?? Hxy|]; subst.
     by rewrite Hxy.
-Qed. *)
-Admitted.
+Qed.
 Canonical Structure gmapR : ora := Ora (gmap K A) gmap_ora_mixin.
 
 Global Instance gmap_ora_discrete : OraDiscrete A → OraDiscrete gmapR.
