@@ -100,7 +100,7 @@ Add Printing Constructor ora.
 #[export] Hint Extern 0 (OraOrderN _) => eapply (@ora_orderN _) : typeclass_instances.
 Coercion ora_ofeO (A : ora) : ofe := Ofe A (ora_ofe_mixin A).
 Canonical Structure ora_ofeO.
-Coercion ora_cmraR (A : ora) : cmra := Cmra A (ora_cmra_mixin A).
+Coercion ora_cmraR (A : ora) : cmra := Cmra' A (ora_ofe_mixin A) (ora_cmra_mixin A).
 Canonical Structure ora_cmraR.
 
 Definition ora_mixin_of' A {Ac : ora} (f : Ac → A) : OraMixin Ac := ora_mixin Ac.
