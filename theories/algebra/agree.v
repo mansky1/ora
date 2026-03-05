@@ -161,10 +161,10 @@ Qed.
 
 End agree.
 
-Arguments agreeR : clear implicits.
+Arguments agreeR {_} _.
 
 Section agree_map.
-  Context {A B : ofe} (f : A → B) `{Hf: NonExpansive f}.
+  Context {SI: sidx} {A B : ofe} (f : A → B) `{Hf: NonExpansive f}.
 
   Global Instance agree_map_morphism : OraMorphism (agree_map f).
   Proof using Hf.
@@ -177,19 +177,19 @@ Section agree_map.
   Qed.
 End agree_map.
 
-Program Definition agreeRF (F : oFunctor) : OrarFunctor := {|
+Program Definition agreeRF {SI : sidx} (F : oFunctor) : OrarFunctor := {|
   orarFunctor_car A _ B _ := agreeR (oFunctor_car F A B);
   orarFunctor_map A1 _ A2 _ B1 _ B2 _ fg := agreeO_map (oFunctor_map F fg)
 |}.
 Next Obligation.
-  intros ? A1 ? A2 ? B1 ? B2 ? n ???; simpl. by apply agreeO_map_ne, oFunctor_map_ne.
+  intros ?? A1 ? A2 ? B1 ? B2 ? n ???; simpl. by apply agreeO_map_ne, oFunctor_map_ne.
 Qed.
 Next Obligation.
-  intros F A ? B ? x; simpl. rewrite -{2}(agree_map_id x).
+  intros ? F A ? B ? x; simpl. rewrite -{2}(agree_map_id x).
   apply (agree_map_ext _)=>y. by rewrite oFunctor_map_id.
 Qed.
 Next Obligation.
-  intros F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x; simpl. rewrite -agree_map_compose.
+  intros ? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x; simpl. rewrite -agree_map_compose.
   apply (agree_map_ext _)=>y; apply oFunctor_map_compose.
 Qed.
 
