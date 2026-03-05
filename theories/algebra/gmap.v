@@ -118,8 +118,13 @@ Proof.
         destruct (y !! i) eqn: Hy; rewrite Hy in Hord |- *; done.
   - intros ?????.
     apply (@ora_dist_orderN _ (optionR A)); auto.
-  - intros ??? Hord i.
-    apply (@ora_orderN_S _ (optionR A)), Hord.
+  - intros ??? ? Hord ? ?.
+    rewrite /OraorderN /gmap_orderN /map_relation  /= in Hord.
+    specialize (Hord i).
+    rewrite /option_relation in Hord |- *.
+    destruct (x!!i) eqn:Hxi; rewrite Hxi in Hord |-*; try done.
+    destruct (y!!i) eqn:Hy; rewrite Hy in Hord |-*; try done.
+    eapply ora_orderN_le; eauto.
   - intros ???? Hxy Hyz i.
     eapply (@ora_orderN_trans _ (optionR A)); [apply Hxy | apply Hyz].
   - intros ???? Hord i.

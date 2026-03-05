@@ -14,7 +14,7 @@ Proof.
   - intros ???? Hv Ho.
     by rewrite -Ho in Hv; apply exclusiveN_r in Hv.
   - eauto.
-  - apply dist_S.
+  - apply dist_le.
   - by intros ???? ->.
   - apply equiv_dist.
   - inversion 1.

@@ -49,8 +49,7 @@ Section mixin.
       ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{Sᵢ n} x ∧ z ≡{n}≡ y;
     (* OraOrder *)
     mixin_ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y;
-    (* FIXME Is this strong enough? *)
-    mixin_ora_orderN_S n x y : x ≼ₒ{Sᵢ n} y → x ≼ₒ{n} y;
+    mixin_ora_orderN_le n n' x y : x ≼ₒ{n} y → n' ≤ n → x ≼ₒ{n'} y;
     mixin_ora_orderN_trans n : Transitive (OraorderN n);
     mixin_ora_orderN_op n x x' y : x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y;
     mixin_ora_validN_orderN n x y : ✓{n} x → y ≼ₒ{n} x → ✓{n} y;
@@ -131,8 +130,8 @@ Section ora_mixin.
   Proof. apply (mixin_ora_extend _ (ora_mixin A)). Qed.
   Lemma ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y.
   Proof. apply (mixin_ora_dist_orderN _ (ora_mixin A)). Qed.
-  Lemma ora_orderN_S n x y : x ≼ₒ{Sᵢ n} y → x ≼ₒ{n} y.
-  Proof. apply (mixin_ora_orderN_S _ (ora_mixin A)). Qed.
+  Lemma ora_orderN_le n n' x y : x ≼ₒ{n} y → n' ≤ n → x ≼ₒ{n'} y.
+  Proof. apply (mixin_ora_orderN_le _ (ora_mixin A)). Qed.
   Global Instance ora_orderN_trans n : Transitive (@OraorderN SI A _ n).
   Proof. apply (mixin_ora_orderN_trans _ (ora_mixin A)). Qed.
   Lemma ora_orderN_op n x x' y : x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y.
@@ -414,19 +413,6 @@ Proof. intros Hyv [z ?]; setoid_subst; eauto using ora_valid_op_l. Qed.
 Lemma ora_validN_order n x y : ✓{n} y → x ≼ y → ✓{n} x.
 Proof. intros Hyv [z ?]; setoid_subst; eauto using ora_validN_op_l. Qed.*)
 Local Set Primitive Projections.
-Lemma ora_orderN_le n n' x y : x ≼ₒ{n} y → n' ≤ n → x ≼ₒ{n'} y.
-Proof.
-  induction (SIdx.lt_wf n) as [n _ IH]; intros.
-  rewrite SIdx.le_lteq in H0.  destruct H0 as [?|Hlt].
-  2: { subst. done. }
-  (* case on whether n has a predecessor *)
-  destruct (SIdx.weak_case n).
-  - destruct s as [pred_n ->].
-    eapply (IH pred_n). 
-    { apply SIdx.lt_succ_diag_r. }
-    { by apply ora_orderN_S. }
-    rewrite -SIdx.lt_succ_r //.
-  - Admitted.
 
 (* Lemma ora_pcore_order_op' x cx y : *)
 (*   pcore x ≡ Some cx → ∃ cxy, pcore (x ⋅ y) = Some cxy ∧ cx ≼ₒ cxy. *)
@@ -807,7 +793,7 @@ Section ora_total.
   Context (extend_order : ∀ n (x y : A),
               ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{Sᵢ n} x ∧ z ≡{n}≡ y).
   Context (dist_orderN : ∀ n (x y : A), x ≡{n}≡ y → x ≼ₒ{n} y).
-  Context (orderN_S : ∀ n (x y : A), x ≼ₒ{Sᵢ n} y → x ≼ₒ{n} y).
+  Context (orderN_le : ∀ n n' (x y : A), x ≼ₒ{n} y → n' ≤ n → x ≼ₒ{n'} y).
   Context (OrderN_trans : ∀ n, Transitive (OraorderN n)).
   Context (orderN_op : ∀ n (x x' y : A), x ≼ₒ{n} x' → x ⋅ y ≼ₒ{n} x' ⋅ y).
   Context (validN_orderN : ∀ n (x y : A), ✓{n} x → y ≼ₒ{n} x → ✓{n} y).
@@ -1256,7 +1242,7 @@ Section prod.
       destruct (ora_extend n x2 y2) as [z2 [? ?]]; auto.
       exists (z1, z2); done.
     - intros ??? [??]; split; by apply ora_dist_orderN.
-    - intros ??? [??]; split; by apply ora_orderN_S.
+    - intros ??? ?[??]; split;  eapply ora_orderN_le; eauto.
     - intros ???? [??]; split; by apply ora_orderN_op.
     - intros ??? [??] [??]; split; by eapply ora_validN_orderN.
     - intros ? ?; split.
@@ -1576,8 +1562,8 @@ Section option.
     - intros n [x|] [y|]; try (by inversion 1).
       intros Hxy. apply ora_dist_orderN.
       by apply Some_dist_inj.
-    - intros n [x|] [y|]; intros Hxy; try done.
-        by apply ora_orderN_S.
+    - intros n n' [x|] [y|]; intros Hxy; try done.
+        by apply ora_orderN_le.
     - intros n [x|] [y|] [z|]; intros Hxy Hyz; try done.
       * eapply ora_orderN_trans; eauto.
       * eapply ora_increasing_closed; eauto.
@@ -1857,7 +1843,7 @@ Section discrete_fun_ora.
           first (by apply Hf); first by apply Hfg. exists z; eauto. }
       exists g'; naive_solver.
     - intros n f g Hfg x. apply ora_dist_orderN; apply Hfg.
-    - intros n f g Hfg x. apply ora_orderN_S; apply Hfg.
+    - intros n f g Hfg x ? ?. eapply ora_orderN_le; eauto.
     - intros n f g h Hfg Hgh x.
       eapply ora_orderN_trans; first eapply Hfg; apply Hgh.
     - intros n f g h Hfg x. rewrite /op /discrete_fun_op /=.

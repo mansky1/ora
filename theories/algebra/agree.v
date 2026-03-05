@@ -9,7 +9,7 @@ Local Coercion agree_car : agree >-> list.
 
 Section agree.
 Local Set Default Proof Using "Type".
-Context {A : ofe}.
+Context {SI : sidx} {A : ofe}.
 Implicit Types a b : A.
 Implicit Types x y : agree A.
 
@@ -103,9 +103,9 @@ Proof.
   - intros n x y Hx Hyx. exists x; split.
     + by apply agree_dist_orderN.
     + symmetry. eapply agree_order_dist; eauto.
-  - intros n x y. intros Hxy a Ha.
+  - intros n n' x y. intros Hxy Hn a Ha.
     destruct (Hxy _ Ha) as [z [Hz1 Hz2]].
-    eexists z; split; auto. by apply dist_S.
+    eexists z; split; auto. eauto using dist_le.
   - intros n x x' y Hxx' a Ha.
     apply elem_of_app in Ha. destruct Ha as [Ha|Ha].
     + destruct (Hxx' _ Ha) as [z [Hz1 Hz2]].

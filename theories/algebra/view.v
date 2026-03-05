@@ -8,7 +8,7 @@ From iris.prelude Require Import options.
 
 Section ora.
 
-  Context {A} {B : uora} (rel : view_rel A B).
+  Context {A: ofe} {B : uora} (rel : view_rel A B).
 
   Lemma view_validN_both : forall n (a : view rel), ✓{n} a -> ✓{n} view_auth_proj a ∧ ✓{n} view_frag_proj a.
   Proof.
@@ -50,7 +50,7 @@ Section ora.
       eapply (ora_extend(A := B)) in Hf as (f & ? & ?); last done.
       exists (View a f); destruct y; done.
     - intros ??? [??]; split; apply ora_dist_orderN; auto.
-    - intros ??? [??]; split; apply ora_orderN_S; auto.
+    - intros ???? [??]; split; eapply ora_orderN_le; eauto.
     - intros ???? [??] [??]; split; etrans; eauto.
     - intros ???? [??]; split; apply @ora_orderN_op; auto.
     - intros ???? [Ha Hf].
