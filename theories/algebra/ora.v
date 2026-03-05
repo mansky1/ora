@@ -869,7 +869,7 @@ Record OrarFunctor := OraRFunctor {
 #[export] Instance: Params (@orarFunctor_map) 5 := {}.
 
 Declare Scope orarFunctor_scope.
-Delimit Scope orarFunctor_scope with RF.
+Delimit Scope orarFunctor_scope with ORF.
 Bind Scope orarFunctor_scope with rFunctor.
 
 Class OrarFunctorContractive (F : OrarFunctor) :=
@@ -906,7 +906,7 @@ Record uorarFunctor := UOraRFunctor {
 #[export] Instance: Params (@uorarFunctor_map) 5 := {}.
 
 Declare Scope uorarFunctor_scope.
-Delimit Scope uorarFunctor_scope with URF.
+Delimit Scope uorarFunctor_scope with UORF.
 Bind Scope uorarFunctor_scope with uorarFunctor.
 
 Class uorarFunctorContractive (F : uorarFunctor) :=
@@ -1350,7 +1350,7 @@ Next Obligation.
   intros F1 F2 A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' [??]; simpl.
   by rewrite !orarFunctor_map_compose.
 Qed.
-Notation "F1 * F2" := (prodRF F1%RF F2%RF) : rFunctor_scope.
+Notation "F1 * F2" := (prodRF F1%ORF F2%ORF) : rFunctor_scope.
 
 #[export] Instance prodRF_contractive F1 F2 :
   OrarFunctorContractive F1 → OrarFunctorContractive F2 →
@@ -1373,7 +1373,7 @@ Next Obligation.
   intros F1 F2 A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' [??]; simpl.
   by rewrite !uorarFunctor_map_compose.
 Qed.
-Notation "F1 * F2" := (prodURF F1%URF F2%URF) : urFunctor_scope.
+Notation "F1 * F2" := (prodURF F1%UORF F2%UORF) : urFunctor_scope.
 
 #[export] Instance prodURF_contractive F1 F2 :
   uorarFunctorContractive F1 → uorarFunctorContractive F2 →
