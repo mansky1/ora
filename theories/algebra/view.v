@@ -8,7 +8,7 @@ From iris.prelude Require Import options.
 
 Section ora.
 
-  Context {A: ofe} {B : uora} (rel : view_rel A B).
+  Context {SI : sidx} {A: ofe} {B : uora} (rel : view_rel A B).
 
   Lemma view_validN_both : forall n (a : view rel), ✓{n} a -> ✓{n} view_auth_proj a ∧ ✓{n} view_frag_proj a.
   Proof.
@@ -116,22 +116,22 @@ instances of the functor structures [rFunctor] and [urFunctor]. Functors can
 only be defined for instances of [view], like [auth]. To make it more convenient
 to define functors for instances of [view], we define the map operation
 [view_map] and a bunch of lemmas about it. *)
-Definition view_map {A A' B B'}
-    {rel : nat → A → B → Prop} {rel' : nat → A' → B' → Prop}
+Definition view_map {SI : sidx} {A A' B B'}
+    {rel : SI → A → B → Prop} {rel' : SI → A' → B' → Prop}
     (f : A → A') (g : B → B') (x : view rel) : view rel' :=
   View (prod_map id (agree_map f) <$> view_auth_proj x) (g (view_frag_proj x)).
-Lemma view_map_id {A B} {rel : nat → A → B → Prop} (x : view rel) :
+Lemma view_map_id {SI : sidx} {A B} {rel : SI → A → B → Prop} (x : view rel) :
   view_map id id x = x.
 Proof. destruct x as [[[]|] ]; by rewrite // /view_map /= agree_map_id. Qed.
-Lemma view_map_compose {A A' A'' B B' B''}
-    {rel : nat → A → B → Prop} {rel' : nat → A' → B' → Prop}
-    {rel'' : nat → A'' → B'' → Prop}
+Lemma view_map_compose {SI : sidx} {A A' A'' B B' B''}
+    {rel : SI → A → B → Prop} {rel' : SI → A' → B' → Prop}
+    {rel'' : SI → A'' → B'' → Prop}
     (f1 : A → A') (f2 : A' → A'') (g1 : B → B') (g2 : B' → B'') (x : view rel) :
   view_map (f2 ∘ f1) (g2 ∘ g1) x
   =@{view rel''} view_map f2 g2 (view_map (rel':=rel') f1 g1 x).
 Proof. destruct x as [[[]|] ];  by rewrite // /view_map /= agree_map_compose. Qed.
-Lemma view_map_ext  {A A' B B' : ofe}
-    {rel : nat → A → B → Prop} {rel' : nat → A' → B' → Prop}
+Lemma view_map_ext {SI : sidx} {A A' B B' : ofe}
+    {rel : SI → A → B → Prop} {rel' : SI → A' → B' → Prop}
     (f1 f2 : A → A') (g1 g2 : B → B')
     `{!NonExpansive f1, !NonExpansive g1} (x : view rel) :
   (∀ a, f1 a ≡ f2 a) → (∀ b, g1 b ≡ g2 b) →
@@ -140,8 +140,8 @@ Proof.
   intros. constructor; simpl; [|by auto].
   apply option_fmap_equiv_ext=> a; by rewrite /prod_map /= agree_map_ext.
 Qed.
-Global Instance view_map_ne {A A' B B' : ofe}
-    {rel : nat → A → B → Prop} {rel' : nat → A' → B' → Prop}
+Global Instance view_map_ne {SI : sidx} {A A' B B' : ofe}
+    {rel : SI → A → B → Prop} {rel' : SI → A' → B' → Prop}
     (f : A → A') (g : B → B') `{Hf : !NonExpansive f, Hg : !NonExpansive g} :
   NonExpansive (view_map (rel':=rel') (rel:=rel) f g).
 Proof.
@@ -150,19 +150,19 @@ Proof.
   apply prod_map_ne; [done| |done]. by apply agree_map_ne.
 Qed.
 
-Definition viewO_map {A A' B B' : ofe}
-    {rel : nat → A → B → Prop} {rel' : nat → A' → B' → Prop}
+Definition viewO_map {SI : sidx} {A A' B B' : ofe}
+    {rel : SI → A → B → Prop} {rel' : SI → A' → B' → Prop}
     (f : A -n> A') (g : B -n> B') : viewO rel -n> viewO rel' :=
   OfeMor (view_map f g).
-Lemma viewO_map_ne {A A' B B' : ofe}
-    {rel : nat → A → B → Prop} {rel' : nat → A' → B' → Prop} :
+Lemma viewO_map_ne {SI : sidx} {A A' B B' : ofe}
+    {rel : SI → A → B → Prop} {rel' : SI → A' → B' → Prop} :
   NonExpansive2 (viewO_map (rel:=rel) (rel':=rel')).
 Proof.
   intros n f f' Hf g g' Hg [[[p ag]|] bf]; split=> //=.
   do 2 f_equiv. by apply agreeO_map_ne.
 Qed.
 
-Lemma view_map_cmra_morphism {A A' B B'}
+Lemma view_map_cmra_morphism {SI : sidx} {A A' B B'}
     {rel : view_rel A B} {rel' : view_rel A' B'}
     (f : A → A') (g : B → B') `{!NonExpansive f, !CmraMorphism g} :
   (∀ n a b, rel n a b → rel' n (f a) (g b)) →
@@ -180,9 +180,10 @@ Proof.
       try apply View_proper=> //=; by rewrite cmra_morphism_op.
 Qed.
 
-Lemma view_map_ora_morphism {A A'} {B B' : uora}
+Lemma view_map_ora_morphism {SI : sidx} {A A'} {B B' : uora}
     {rel : view_rel A B} {rel' : view_rel A' B'}
-    (Hrel : ∀n a x y, x ≼ₒ{n} y → rel n a y → rel n a x) (Hrel' : ∀n a x y, x ≼ₒ{n} y → rel' n a y → rel' n a x)
+    (Hrel : ∀n a x y, x ≼ₒ{n} y → rel n a y → rel n a x)
+    (Hrel' : ∀n a x y, x ≼ₒ{n} y → rel' n a y → rel' n a x)
     (f : A → A') (g : B → B') `{!NonExpansive f, !OraMorphism g} :
   (∀ n a b, rel n a b → rel' n (f a) (g b)) →
   OraMorphism(A := viewR rel Hrel)(B := viewR rel' Hrel') (view_map (rel:=rel) (rel':=rel') f g).

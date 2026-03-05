@@ -193,7 +193,7 @@ Next Obligation.
   apply (agree_map_ext _)=>y; apply oFunctor_map_compose.
 Qed.
 
-#[export] Instance agreeRF_contractive F :
+#[export] Instance agreeRF_contractive {SI : sidx} F :
   oFunctorContractive F → OrarFunctorContractive (agreeRF F).
 Proof.
   intros ? A1 ? A2 ? B1 ? B2 ? n ???; simpl.
