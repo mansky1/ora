@@ -56,12 +56,12 @@ Record ouPred (M : uora) : Type := IProp {
   ouPred_mono n1 n2 x1 x2 :
     ouPred_holds n1 x1 → x1 ≼ₒ{n1} x2 → n2 ≤ n1 → ouPred_holds n2 x2
 }.
+
+Bind Scope bi_scope with ouPred.
 Arguments ouPred_holds {_} _ _ _ : simpl never.
 Add Printing Constructor ouPred.
 #[export] Instance: Params (@ouPred_holds) 3 := {}.
 
-Bind Scope bi_scope with ouPred.
-Arguments ouPred_holds {_} _%I _ _.
 
 Section cofe.
   Context {M : uora}.

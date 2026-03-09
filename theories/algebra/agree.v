@@ -1,7 +1,5 @@
 From iris.algebra Require Import agree.
 From iris_ora.algebra Require Export ora.
-(* From iris_ora.algebra Require Import list. *)
-From iris_ora.logic Require Import oupred.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 Local Arguments op _ _ _ !_ /.
@@ -161,18 +159,6 @@ Proof.
   by rewrite -EQy -EQz -Hx'y' -Hx'z'.
 Qed.
 
-(** Internalized properties *)
-Lemma agree_equivI {M} a b : to_agree a ≡ to_agree b ⊣⊢ (a ≡ b : ouPred M).
-Proof.
-  rewrite /internal_eq /bi_internal_eq_internal_eq /=. ouPred.unseal. do 2 split.
-  - intros Hx. exact: to_agree_injN.
-  - intros Hx. exact: to_agree_ne.
-Qed.
-Lemma agree_validI {M} x y : ✓ (x ⋅ y) ⊢ (x ≡ y : ouPred M).
-Proof.
-  rewrite /internal_eq /bi_internal_eq_internal_eq /=.
-  ouPred.unseal; split=> r n _ ?; by apply: agree_op_invN.
-Qed.
 End agree.
 
 Arguments agreeR : clear implicits.
