@@ -60,7 +60,7 @@ Section excl.
   Lemma excl_equivI x y :
     x ≡ y ⊣⊢ match x, y with
                         | Excl a, Excl b => a ≡ b
-                        | ExclBot, ExclBot => True
+                        | ExclInvalid, ExclInvalid => True
                         | _, _ => False
                         end.
   Proof.
@@ -69,7 +69,7 @@ Section excl.
     - by destruct x, y; try constructor.
   Qed.
   Lemma excl_validI x :
-    ✓ x ⊣⊢ if x is ExclBot then False else True.
+    ✓ x ⊣⊢ if x is ExclInvalid then False else True.
   Proof. ouPred.unseal. by destruct x. Qed.
 End excl.
 
@@ -115,7 +115,7 @@ Section csum_ofe.
     x ≡ y ⊣⊢ match x, y with
                         | Cinl a, Cinl a' => a ≡ a'
                         | Cinr b, Cinr b' => b ≡ b'
-                        | CsumBot, CsumBot => True
+                        | CsumInvalid, CsumInvalid => True
                         | _, _ => False
                         end.
   Proof.
@@ -133,7 +133,7 @@ Section csum_ora.
     ✓ x ⊣⊢ match x with
                       | Cinl a => ✓ a
                       | Cinr b => ✓ b
-                      | CsumBot => False
+                      | CsumInvalid => False
                       end.
   Proof. ouPred.unseal. by destruct x. Qed.
 End csum_ora.

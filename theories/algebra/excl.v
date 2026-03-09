@@ -3,7 +3,7 @@ From iris_ora.algebra Require Export ora.
 From iris.prelude Require Import options.
 
 Section excl.
-Context {A : ofe}.
+Context {SI: sidx} {A : ofe}.
 
 Instance excl_orderN : OraOrderN (excl A) := dist.
 Instance excl_order : OraOrder (excl A) := equiv.
@@ -14,7 +14,7 @@ Proof.
   - intros ???? Hv Ho.
     by rewrite -Ho in Hv; apply exclusiveN_r in Hv.
   - eauto.
-  - apply dist_S.
+  - apply dist_le.
   - by intros ???? ->.
   - apply equiv_dist.
   - inversion 1.
@@ -22,9 +22,9 @@ Qed.
 
 End excl.
 
-Canonical Structure exclR (A : ofe) := Ora (excl A) (@excl_ora_mixin A).
+Canonical Structure exclR {SI: sidx} (A : ofe) := Ora (excl A) (@excl_ora_mixin _ A).
 
-#[export] Instance excl_ora_discrete A : OfeDiscrete A → OraDiscrete (exclR A).
+#[export] Instance excl_ora_discrete {SI: sidx} (A : ofe) : OfeDiscrete A → OraDiscrete (exclR A).
 Proof.
   intros (? & ?)%excl_cmra_discrete.
   constructor; done.

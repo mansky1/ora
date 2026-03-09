@@ -22,13 +22,13 @@ NOTE: The API surface for [gmap_view] is experimental and subject to change.  We
 plan to add notations for authoritative elements and fragments, and hope to
 support arbitrary maps as fragments. *)
 
-Local Definition gmap_view_fragUR (K : Type) `{Countable K} (V : ofe) : uora :=
+Local Definition gmap_view_fragUR {SI : sidx} (K : Type) `{Countable K} (V : ofe) : uora :=
   gmapUR K (prodR dfracR (agreeR V)).
 
 (** View relation. *)
 Section rel.
-  Context (K : Type) `{Countable K} (V : ofe).
-  Implicit Types (m : gmap K V) (k : K) (v : V) (n : nat).
+  Context {SI : sidx} (K : Type) `{Countable K} (V : ofe).
+  Implicit Types (m : gmap K V) (k : K) (v : V) (n : SI).
   Implicit Types (f : gmap K (dfrac * agree V)).
 
   Local Definition gmap_view_rel_raw n m f : Prop :=
@@ -38,7 +38,7 @@ Section rel.
     gmap_view_rel_raw n1 m1 f1 →
     m1 ≡{n2}≡ m2 →
     f2 ≼{n2} f1 →
-    n2 ≤ n1 →
+    (n2 ≤ n1)%sidx →
     gmap_view_rel_raw n2 m2 f2.
   Proof.
     intros Hrel Hm Hf Hn k [q va] Hk.
@@ -143,19 +143,19 @@ Local Existing Instance gmap_view_rel_discrete.
 (** [gmap_view] is a notation to give canonical structure search the chance
 to infer the right instances (see [auth]). *)
 Notation gmap_view K V := (view (@gmap_view_rel_raw K _ _ V)).
-Definition gmap_viewO (K : Type) `{Countable K} (V : ofe) : ofe :=
+Definition gmap_viewO {SI : sidx} (K : Type) `{Countable K} (V : ofe) : ofe :=
   viewO (gmap_view_rel K V).
-Definition gmap_viewC (K : Type) `{Countable K} (V : ofe) : cmra :=
+Definition gmap_viewC {SI : sidx} (K : Type) `{Countable K} (V : ofe) : cmra :=
   iris.algebra.view.viewR (gmap_view_rel K V).
-Definition gmap_viewUC (K : Type) `{Countable K} (V : ofe) : ucmra :=
+Definition gmap_viewUC {SI : sidx} (K : Type) `{Countable K} (V : ofe) : ucmra :=
   iris.algebra.view.viewUR (gmap_view_rel K V).
-Canonical Structure gmap_viewR (K : Type) `{Countable K} (V : ofe) : ora :=
+Canonical Structure gmap_viewR {SI : sidx} (K : Type) `{Countable K} (V : ofe) : ora :=
   view.viewR (gmap_view_rel K V) (gmap_view_rel_order K V).
-Canonical Structure gmap_viewUR (K : Type) `{Countable K} (V : ofe) : uora :=
+Canonical Structure gmap_viewUR {SI : sidx} (K : Type) `{Countable K} (V : ofe) : uora :=
   viewUR (gmap_view_rel K V).
 
 Section definitions.
-  Context {K : Type} `{Countable K} {V : ofe}.
+  Context {SI : sidx} {K : Type} `{Countable K} {V : ofe}.
 
   Definition gmap_view_auth (dq : dfrac) (m : gmap K V) : gmap_viewC K V :=
     ●V{dq} m.
@@ -164,7 +164,7 @@ Section definitions.
 End definitions.
 
 Section lemmas.
-  Context {K : Type} `{Countable K} {V : ofe}.
+  Context {SI : sidx} {K : Type} `{Countable K} {V : ofe}.
   Implicit Types (m : gmap K V) (k : K) (q : Qp) (dq : dfrac) (v : V).
 
   Global Instance : Params (@gmap_view_auth) 5 := {}.
@@ -254,7 +254,8 @@ Section lemmas.
   Lemma gmap_view_frag_valid k dq v : ✓ gmap_view_frag k dq v ↔ ✓ dq.
   Proof.
     rewrite cmra_valid_validN. setoid_rewrite gmap_view_frag_validN.
-    naive_solver eauto using O.
+    pose 0ᵢ.
+    naive_solver.
   Qed.
 
   Lemma gmap_view_frag_op k dq1 dq2 v :
@@ -305,7 +306,7 @@ Section lemmas.
     rewrite view_both_dfrac_valid. setoid_rewrite gmap_view_rel_lookup.
     split=>[[Hq Hm]|[Hq Hm]].
     - split; first done. split.
-      + apply (Hm 0%nat).
+      + apply (Hm 0ᵢ).
       + apply equiv_dist=>n. apply Hm.
     - split; first done. intros n. split.
       + apply Hm.
@@ -466,7 +467,7 @@ Section lemmas.
 End lemmas.
 
 (** Functor *)
-Program Definition gmap_viewURF (K : Type) `{Countable K} (F : oFunctor) : uorarFunctor := {|
+Program Definition gmap_viewURF {SI : sidx} (K : Type) `{Countable K} (F : oFunctor) : uorarFunctor := {|
   uorarFunctor_car A _ B _ := gmap_viewUR K (oFunctor_car F A B);
   uorarFunctor_map A1 _ A2 _ B1 _ B2 _ fg :=
     viewO_map (rel:=gmap_view_rel K (oFunctor_car F A1 B1))
@@ -475,14 +476,14 @@ Program Definition gmap_viewURF (K : Type) `{Countable K} (F : oFunctor) : uorar
               (gmapO_map (K:=K) (prodO_map cid (agreeO_map (oFunctor_map F fg))))
 |}.
 Next Obligation.
-  intros K ?? F A1 ? A2 ? B1 ? B2 ? n f g Hfg.
+  intros ? K ?? F A1 ? A2 ? B1 ? B2 ? n f g Hfg.
   apply viewO_map_ne.
   - apply gmapO_map_ne, oFunctor_map_ne. done.
   - apply gmapO_map_ne. apply prodO_map_ne; first done.
     apply agreeO_map_ne, oFunctor_map_ne. done.
 Qed.
 Next Obligation.
-  intros K ?? F A ? B ? x; simpl in *. rewrite -{2}(view_map_id x).
+  intros ? K ?? F A ? B ? x; simpl in *. rewrite -{2}(view_map_id x).
   apply (view_map_ext _ _ _ _)=> y.
   - rewrite /= -{2}(map_fmap_id y).
     apply map_fmap_equiv_ext=>k ??.
@@ -495,7 +496,7 @@ Next Obligation.
     apply oFunctor_map_id.
 Qed.
 Next Obligation.
-  intros K ?? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x; simpl in *.
+  intros ? K ?? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x; simpl in *.
   rewrite -view_map_compose.
   apply (view_map_ext _ _ _ _)=> y.
   - rewrite /= -map_fmap_compose.
@@ -509,7 +510,7 @@ Next Obligation.
     apply oFunctor_map_compose.
 Qed.
 Next Obligation.
-  intros K ?? F A1 ? A2 ? B1 ? B2 ? fg; simpl.
+  intros ? K ?? F A1 ? A2 ? B1 ? B2 ? fg; simpl.
   (* [apply] does not work, probably the usual unification probem (Coq #6294) *)
   apply: view_map_ora_morphism; [apply _..|]=> n m f.
   intros Hrel k [df va] Hf. move: Hf.
@@ -522,7 +523,7 @@ Next Obligation.
   rewrite Hagree. rewrite agree_map_to_agree. done.
 Qed.
 
-Global Instance gmap_viewURF_contractive (K : Type) `{Countable K} F :
+Global Instance gmap_viewURF_contractive {SI : sidx} (K : Type) `{Countable K} F :
   oFunctorContractive F → uorarFunctorContractive (gmap_viewURF K F).
 Proof.
   intros ? A1 ? A2 ? B1 ? B2 ? n f g Hfg.
@@ -532,7 +533,7 @@ Proof.
     apply agreeO_map_ne, oFunctor_map_contractive. done.
 Qed.
 
-Program Definition gmap_viewRF (K : Type) `{Countable K} (F : oFunctor) : OrarFunctor := {|
+Program Definition gmap_viewRF {SI : sidx} (K : Type) `{Countable K} (F : oFunctor) : OrarFunctor := {|
   orarFunctor_car A _ B _ := gmap_viewR K (oFunctor_car F A B);
   orarFunctor_map A1 _ A2 _ B1 _ B2 _ fg :=
     viewO_map (rel:=gmap_view_rel K (oFunctor_car F A1 B1))
@@ -540,9 +541,9 @@ Program Definition gmap_viewRF (K : Type) `{Countable K} (F : oFunctor) : OrarFu
               (gmapO_map (K:=K) (oFunctor_map F fg))
               (gmapO_map (K:=K) (prodO_map cid (agreeO_map (oFunctor_map F fg))))
 |}.
-Solve Obligations with apply gmap_viewURF.
+Solve Obligations with apply @gmap_viewURF.
 
-Global Instance gmap_viewRF_contractive (K : Type) `{Countable K} F :
+Global Instance gmap_viewRF_contractive {SI : sidx} (K : Type) `{Countable K} F :
   oFunctorContractive F → OrarFunctorContractive (gmap_viewRF K F).
 Proof. apply gmap_viewURF_contractive. Qed.
 

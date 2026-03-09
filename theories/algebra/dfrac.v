@@ -6,7 +6,7 @@ Local Arguments op _ _ _ !_ /.
 Local Arguments pcore _ _ !_ /.
 
 Section ora.
-
+  Context {SI : sidx}.
   Local Instance dfrac_order : OraOrder dfrac := λ a b, a = b ∨ a ⋅ DfracDiscarded = b.
 
   Local Instance discard_increasing : Increasing DfracDiscarded.

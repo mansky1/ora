@@ -125,7 +125,7 @@ Proof.
   (* FIXME : simplify this proof once we have a good definition and a
      proper instance for step_fupdN. *)
   induction num_laters_per_step as [|k IHk]; simpl; last by rewrite IHk.
-  rewrite IH; [done|lia|]. intros v. eapply dist_le; [apply HΦ|lia].
+  rewrite IH; [done..|]. intros v. eapply dist_lt; [apply HΦ|done].
 Qed.
 Global Instance wp_proper s E e :
   Proper (pointwise_relation _ (≡) ==> (≡)) (wp (PROP:=iProp Σ) s E e).

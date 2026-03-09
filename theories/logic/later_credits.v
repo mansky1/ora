@@ -186,7 +186,7 @@ Module le_upd.
     Proof.
       intros n; induction (lt_wf n) as [n _ IH].
       intros P1 P2 HP. rewrite (le_upd_unfold P1) (le_upd_unfold P2).
-      do 9 (done || f_equiv). f_contractive. eapply IH, dist_le; [lia|done|lia].
+      do 9 (done || f_equiv). f_contractive. eapply IH, dist_lt; done.
     Qed.
 
     Lemma bupd_le_upd P : (|==> P) ⊢ (|==£> P).

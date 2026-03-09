@@ -4,7 +4,7 @@ Require Import iris_ora.algebra.ora.
 (* inclusion order *)
 Section incl.
 
-Context {A : cmra} `{CmraTotal A}.
+Context {SI : sidx} `{A : !cmra} `{!CmraTotal A}.
 
 Instance incl_orderN : OraOrderN A := includedN.
 Instance incl_order : OraOrder A := λ x y, ∀n, x ≼{n} y.
@@ -30,7 +30,7 @@ Proof.
     exists z; rewrite Heq; split; [eexists|]; eauto.
   - intros ??? ->.
     exists (core y); by rewrite cmra_core_r.
-  - intros; by apply cmra_includedN_S.
+  - intros; eapply cmra_includedN_le; eauto.
   - intros; by apply cmra_monoN_r.
   - intros; by eapply cmra_validN_includedN.
   - intros ??? Hcore.
@@ -90,7 +90,7 @@ Section flat.
 
 (* This works, but only for very restricted algebras. *)
 
-Context {A : ucmra} (core_unit : forall (a : A), core a ≡ ε) {discrete_unit : Discrete (ε : A)}.
+Context {SI : sidx} {A : ucmra} (core_unit : forall (a : A), core a ≡ ε) {discrete_unit : Discrete (ε : A)}.
 
 Instance flat_orderN : OraOrderN A := dist.
 Instance flat_order : OraOrder A := equiv.
@@ -117,7 +117,7 @@ Proof.
     eexists _, _; split; last done.
     by rewrite Heq1.
   - eauto.
-  - apply dist_S.
+  - apply dist_le.
   - by intros ???? ->.
   - by intros ???? ->.
   - apply equiv_dist.
@@ -140,7 +140,7 @@ End flat.
 
 Section positive.
 
-Context {A : cmra} (positive : forall (a : A), ~a ≡ a ⋅ a).
+Context {SI : sidx} {A : cmra} (positive : forall (a : A), ~a ≡ a ⋅ a).
 
 Lemma coreless : forall (a : A), pcore a = None.
 Proof.
@@ -169,7 +169,7 @@ Proof.
     eexists _, _; split; last done.
     by rewrite Heq1.
   - eauto.
-  - apply dist_S.
+  - apply dist_le.
   - by intros ???? ->.
   - by intros ???? ->.
   - apply equiv_dist.
@@ -179,9 +179,9 @@ Qed.
 
 Local Canonical Structure positiveR : ora := Ora A positive_ora_mixin.
 
-#[export] Instance positive_discrete `{CmraDiscrete A} : OraDiscrete positiveR.
+#[export] Instance positive_discrete `{CmraDiscrete0: !CmraDiscrete A} : OraDiscrete positiveR.
 Proof.
-  destruct H; constructor; done.
+  destruct CmraDiscrete0; constructor; done.
 Qed.
 
 End positive.

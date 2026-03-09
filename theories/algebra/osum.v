@@ -6,14 +6,14 @@ Local Arguments csum_pcore_instance _ _ !_/.
 Local Arguments cmra_car _ /.
 Local Arguments cmra_pcore _ / _.
 Local Arguments ora_pcore _ !_ /.
-Local Arguments validN _ _ _ !_ /.
+Local Arguments validN _ _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 Local Arguments cmra_validN _ / _ _.
-Local Arguments ora_validN _ _ !_ /.
+Local Arguments ora_validN _ _ _ !_ /.
 Local Arguments ora_valid _  !_ /.
 
 Section ora.
-Context {A B : ora}.
+Context {SI : sidx} {A B : ora}.
 Implicit Types a : A.
 Implicit Types b : B.
 
@@ -22,7 +22,7 @@ Instance csum_order : OraOrder (csum A B) := λ x y,
   match x, y with
   | Cinl a, Cinl a' => a ≼ₒ a'
   | Cinr b, Cinr b' => b ≼ₒ b'
-  | _, CsumBot => True
+  | _, CsumInvalid => True
   | _, _ => False
   end.
 
@@ -30,12 +30,12 @@ Instance csum_orderN : OraOrderN (csum A B) := λ n x y,
   match x, y with
   | Cinl a, Cinl a' => a ≼ₒ{n} a'
   | Cinr b, Cinr b' => b ≼ₒ{n} b'
-  | _, CsumBot => True
+  | _, CsumInvalid => True
   | _, _ => False
   end.
 
 Lemma csum_order' x y :
-  x ≼ₒ y ↔ y = CsumBot ∨ (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ a ≼ₒ a')
+  x ≼ₒ y ↔ y = CsumInvalid ∨ (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ a ≼ₒ a')
                        ∨ (∃ b b', x = Cinr b ∧ y = Cinr b' ∧ b ≼ₒ b').
 Proof.
   destruct x; destruct y; split; rewrite /Oraorder /=; intuition;
@@ -47,7 +47,7 @@ Proof.
 Qed.
 
 Lemma csum_orderN' n x y :
-  x ≼ₒ{n} y ↔ y = CsumBot ∨ (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ a ≼ₒ{n} a')
+  x ≼ₒ{n} y ↔ y = CsumInvalid ∨ (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ a ≼ₒ{n} a')
                           ∨ (∃ b b', x = Cinr b ∧ y = Cinr b' ∧ b ≼ₒ{n} b').
 Proof.
   destruct x; destruct y; split; rewrite /OraorderN /=; intuition;
@@ -58,7 +58,7 @@ Proof.
     try (right; right; eauto; fail).
 Qed.
 
-Lemma Increasing_CsumBot : Increasing CsumBot.
+Lemma Increasing_CsumInvalid : Increasing CsumInvalid.
 Proof. intros [?|?|]; done. Qed.
 
 Lemma Increasing_cinl a : Increasing a ↔ Increasing (Cinl a).
@@ -117,7 +117,7 @@ Proof.
       exists (Cinr z); repeat split; by try constructor.
   - intros n [xl|xr|] [yl|yr|] Hyx; inversion Hyx; simplify_eq; try done;
       apply ora_dist_orderN; auto.
-  - intros n [xl|xr|] [yl|yr|] Hyx; try done; apply ora_orderN_S; auto.
+  - intros n n' [xl|xr|] [yl|yr|] Hyx; try done; apply ora_orderN_le; auto.
   - intros n [xl|xr|] [yl|yr|] [zl|zr|] Hxy Hyz; try done;
         eapply ora_orderN_trans; eauto.
   - intros n [xl|xr|] [x'l|x'r|] [yl|yr|] Hxx'; try done; auto;
@@ -125,8 +125,8 @@ Proof.
   - intros n [xl|xr|] [yl|yr|] Hx Hyx; try done;
       eapply ora_validN_orderN; eauto; apply Hx.
   - intros [xl|xr|] [yl|yr|]; split => Hx; try intros n;
-    try done; try (by (pose proof (Hx 0) as Hx0; inversion Hx0));
-    apply ora_order_orderN; auto.
+    try done; try (by (pose proof (Hx 0) as Hx0; inversion Hx0)); solve [apply ora_order_orderN; auto |
+    apply Hx, SIdx.inhabited].
   - intros [xl|xr|] [cxl|cxr|] [yl|yr|]; simpl in *;
       try destruct (pcore xl) as [cxl'|] eqn:Heq;
       try destruct (pcore xr) as [cxr'|] eqn:Heq;
@@ -231,37 +231,37 @@ Proof. intros ? [] ? EQ; inversion_clear EQ. by eapply oraid_free0_r. Qed.
 (* Qed. *)
 End ora.
 
-Arguments csumR : clear implicits.
+Arguments csumR {_} _ _.
 
 (* Functor *)
-#[export] Instance csum_map_ora_morphism {A A' B B' : ora} (f : A → A') (g : B → B') :
+#[export] Instance csum_map_ora_morphism {SI : sidx} {A A' B B' : ora} (f : A → A') (g : B → B') :
   OraMorphism f → OraMorphism g → OraMorphism (csum_map f g).
 Proof.
   split; try apply _.
   - intros n [a|b|] [a'|b'|]; simpl; try done;
         rewrite -?Cinl_orderN -?Cinr_orderN; by apply ora_morphism_orderN.
   - intros [a|b|]; rewrite /= -?Increasing_cinl -?Increasing_cinr => ?;
-      last apply Increasing_CsumBot; by apply ora_morphism_increasing.
+      last apply Increasing_CsumInvalid; by apply ora_morphism_increasing.
 Qed.
 
-Program Definition csumRF (Fa Fb : OrarFunctor) : OrarFunctor := {|
+Program Definition csumRF {SI : sidx} (Fa Fb : OrarFunctor) : OrarFunctor := {|
   orarFunctor_car A _ B _ := csumR (orarFunctor_car Fa A B) (orarFunctor_car Fb A B);
   orarFunctor_map A1 _ A2 _ B1 _ B2 _ fg := csumO_map (orarFunctor_map Fa fg) (orarFunctor_map Fb fg)
 |}.
 Next Obligation.
-  by intros Fa Fb A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply csumO_map_ne;
+  by intros ? Fa Fb A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply csumO_map_ne;
     try apply orarFunctor_map_ne.
 Qed.
 Next Obligation.
-  intros Fa Fb A ? B ? x. rewrite /= -{2}(csum_map_id x).
+  intros ? Fa Fb A ? B ? x. rewrite /= -{2}(csum_map_id x).
   apply csum_map_ext=>y; apply orarFunctor_map_id.
 Qed.
 Next Obligation.
-  intros Fa Fb A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x. rewrite /= -csum_map_compose.
+  intros ? Fa Fb A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x. rewrite /= -csum_map_compose.
   apply csum_map_ext=>y; apply orarFunctor_map_compose.
 Qed.
 
-#[export] Instance csumRF_contractive Fa Fb :
+#[export] Instance csumRF_contractive {SI : sidx} Fa Fb :
   OrarFunctorContractive Fa → OrarFunctorContractive Fb →
   OrarFunctorContractive (csumRF Fa Fb).
 Proof.
