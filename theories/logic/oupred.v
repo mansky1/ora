@@ -724,7 +724,7 @@ Lemma entails_lim (cP cQ : chain (ouPredO M)) :
   (∀ n, cP n ⊢ cQ n) → compl cP ⊢ compl cQ.
 Proof.
   intros Hlim; split=> n m ? HP.
-  eapply ouPred_holds_ne, Hlim; eauto. rewrite ?conv_compl; eauto.
+    eapply ouPred_holds_ne, Hlim; [..|apply: HP]; rewrite ?conv_compl; eauto.
 Qed.
 
 (** Basic update modality *)
