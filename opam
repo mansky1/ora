@@ -1,11 +1,12 @@
 opam-version: "2.0"
 synopsis: "Ordered Resource Algebras for Iris"
-name: "coq-iris-ora"
+name: "rocq-vst-ora"
 authors: [
   "Robbert Krebbers"
   "Ralf Jung"
   "Amin Timany"
   "William Mansky"
+  "Ke Du"
 ]
 maintainer: "William Mansky"
 build: [make "-j%{jobs}%"]
@@ -13,5 +14,5 @@ install: [make "install"]
 description: "Iris Ora"
 remove: ["rm" "-rf" "'%{lib}%/coq/user-contrib/iris_ora"]
 depends: [
-  "coq-iris" { = "4.4.0" }
+  "rocq-iris" { = "4.5.0" }
 ]

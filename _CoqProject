@@ -19,7 +19,6 @@ theories/algebra/excl_auth.v
 theories/algebra/frac_auth.v
 theories/algebra/gmap_view.v
 theories/logic/oupred.v
-theories/logic/algebra.v
 theories/logic/iprop.v
 theories/logic/derived.v
 theories/logic/own.v

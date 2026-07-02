@@ -2,7 +2,7 @@
 That update is used internally to define the Iris [fupd]; it should not
 usually be directly used unless you are defining your own [fupd]. *)
 From iris.prelude Require Import options.
-From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import proofmode.
 From iris.algebra Require Export auth.
 From iris_ora.algebra Require Export auth.
 From iris_ora.logic Require Import iprop own.
@@ -379,7 +379,8 @@ Module le_upd.
   Lemma lc_soundness `{!lcGpreS Σ} m (P : iProp Σ) `{!Plain P} `{!Absorbing P}:
     (∀ {Hc: lcGS Σ}, £ m -∗ |==£> P) → ⊢ P.
   Proof.
-    intros H. apply (bupd_laterN_soundness _ (S m)).
+    intros H. 
+    apply modal_soundness with (concat (replicate (S m) [MBUpd; MLater])); [apply _.. | simpl].
     iStartProof.
     iMod (lc_alloc m) as (C) "[H● H◯]".
     iPoseProof (H C) as "Hc". iSpecialize ("Hc" with "H◯").

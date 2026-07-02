@@ -1,7 +1,7 @@
 (* modified from iris.base_logic.lib.own *)
 
 From iris.algebra Require Import functions gmap proofmode_classes.
-From iris.base_logic Require Import algebra.
+From iris.bi Require Import algebra.
 From iris.proofmode Require Import classes.
 From iris_ora.algebra Require Import functions gmap.
 From iris_ora.logic Require Export iprop derived.
@@ -121,11 +121,9 @@ Local Instance iRes_singleton_ne γ : NonExpansive (@iRes_singleton Σ A _ γ).
 Proof. by intros n a a' Ha; apply discrete_fun_singleton_ne; rewrite Ha. Qed.
 Local Lemma iRes_singleton_validI γ a : ✓ (iRes_singleton γ a) ⊢@{iPropI Σ} ✓ a.
 Proof.
-  rewrite /iRes_singleton.
-  rewrite discrete_fun_validI (forall_elim (inG_id i)) discrete_fun_lookup_singleton.
-  rewrite singleton_validI.
-  trans (✓ ora_transport inG_prf a : iProp Σ)%I; last by destruct inG_prf.
-  apply valid_entails=> n. apply inG_unfold_validN.
+  sbi_unfold=> n. rewrite /iRes_singleton.
+  rewrite discrete_fun_singleton_validN singleton_validN inG_unfold_validN.
+  by destruct inG_prf.
 Qed.
 Local Lemma iRes_singleton_op γ a1 a2 :
   iRes_singleton γ (a1 ⋅ a2) ≡ iRes_singleton γ a1 ⋅ iRes_singleton γ a2.
@@ -157,7 +155,7 @@ Proof.
   assert (NonExpansive (λ r : iResUR Σ, r (inG_id i) !! γ)).
   { intros n r1 r2 Hr. f_equiv. by specialize (Hr (inG_id i)). }
   rewrite (f_equivI (λ r : iResUR Σ, r (inG_id i) !! γ) r).
-  rewrite {1}/iRes_singleton discrete_fun_lookup_singleton lookup_singleton.
+  rewrite {1}/iRes_singleton discrete_fun_lookup_singleton lookup_singleton_eq.
   rewrite option_equivI. case Hb: (r (inG_id _) !! γ)=> [b|]; last first.
   { by rewrite /bi_except_0 -or_intro_l. }
   rewrite -except_0_intro.
@@ -170,7 +168,7 @@ Proof.
     destruct (decide (i' = inG_id i)) as [->|?].
     + rewrite discrete_fun_lookup_insert discrete_fun_lookup_singleton.
       intros γ'. rewrite lookup_op. destruct (decide (γ' = γ)) as [->|?].
-      * by rewrite lookup_singleton lookup_delete Hb inG_unfold_fold.
+      * by rewrite lookup_singleton_eq lookup_delete_eq Hb inG_unfold_fold.
       * by rewrite lookup_singleton_ne // lookup_delete_ne // left_id.
     + rewrite discrete_fun_lookup_insert_ne //.
       by rewrite discrete_fun_lookup_singleton_ne // left_id.
@@ -193,7 +191,7 @@ Proof. rewrite !own_eq /own_def /iRes_singleton. intros; apply ownM_mono.
   intros ?. destruct (decide (x = inG_id i)); last by rewrite !discrete_fun_lookup_singleton_ne.
   subst; rewrite !discrete_fun_lookup_singleton.
   intros k; destruct (decide (γ = k)); last by rewrite !lookup_singleton_ne.
-  subst; rewrite !lookup_singleton /=.
+  subst; rewrite !lookup_singleton_eq /=.
   apply ora_morphism_monotone; first by apply _.
   by destruct inG_prf.
 Qed.
@@ -225,7 +223,7 @@ Proof. rewrite /Affine !own_eq /own_def.
   destruct (decide (j = inG_id i)); last by rewrite discrete_fun_lookup_singleton_ne.
   subst; rewrite discrete_fun_lookup_singleton.
   destruct (decide (γ = k)); last by rewrite !lookup_singleton_ne.
-  subst; rewrite !lookup_singleton /=.
+  subst; rewrite !lookup_singleton_eq /=.
   apply ora_morphism_increasing; first by apply _.
   intros ?.
   destruct inG_prf; simpl.
@@ -415,7 +413,7 @@ Section proofmode_instances.
   Global Instance from_sep_own γ a b1 b2 :
     IsOp a b1 b2 → FromSep (own γ a) (own γ b1) (own γ b2).
   Proof. intros. by rewrite /FromSep -own_op -is_op. Qed.
-(*  (* TODO: Improve this instance with generic own simplification machinery
+  (* TODO: Improve this instance with generic own simplification machinery
   once https://gitlab.mpi-sws.org/iris/iris/-/issues/460 is fixed *)
   Global Instance combine_sep_as_own γ a b1 b2 :
     IsOp a b1 b2 → CombineSepAs (own γ b1) (own γ b2) (own γ a).
@@ -427,12 +425,5 @@ Section proofmode_instances.
   Proof.
     intros. rewrite /CombineSepGives -own_op own_valid.
     by apply: bi.persistently_intro.
-  Qed.*)
-(*  Global Instance from_and_own_persistent γ a b1 b2 :
-    IsOp a b1 b2 → TCOr (OraCoreId b1) (OraCoreId b2) →
-    FromAnd (own γ a) (own γ b1) (own γ b2).
-  Proof.
-    intros ? Hb. rewrite /FromAnd (is_op a) own_op.
-    destruct Hb; by rewrite persistent_and_sep.
-  Qed.*)
+  Qed.
 End proofmode_instances.

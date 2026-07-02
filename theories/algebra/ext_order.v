@@ -109,7 +109,7 @@ Proof.
   - apply cmra_unit_cmra_total.
   - by intros ?; rewrite Increasing_unit.
   - intros ???; rewrite !Increasing_unit.
-    by intros -> ?%discrete_iff.
+    by intros -> ?%(discrete_iff _ _ _).
   - apply cmra_core_ne.
   - intros ?????.
     rewrite /OraorderN /flat_orderN =>Hdist.

@@ -25,7 +25,7 @@ Lemma lookup_increasing : forall m i, Increasing m -> Increasing (m !! i).
 Proof.
   intros ?? Hincr [a|].
   - specialize (Hincr {[ i := a ]} i).
-    by rewrite lookup_op lookup_singleton in Hincr.
+    by rewrite lookup_op lookup_singleton_eq in Hincr.
   - specialize (Hincr ε i).
     by rewrite lookup_op lookup_empty in Hincr.
 Qed.
@@ -60,7 +60,7 @@ Proof.
       Some (ni, ((i, a), (yy1, yy2))) /\ yy1 ⋅ yy2 ≼ₒ{Sᵢ n} Some a ∧ yy1 ≡{n}≡ y1 !! i ∧ yy2 ≡{n}≡ y2 !! i) as Hgg'.
     { intros ?? Hxi.
       pose proof (proj2 (elem_of_map_to_list _ _ _) Hxi) as Helem.
-      apply elem_of_list_lookup_1 in Helem as (ni & Hmap).
+      apply list_elem_of_lookup_1 in Helem as (ni & Hmap).
       eapply Forall2_lookup_l in Hgg as ((yy1, yy2) & ? & Hgg); eauto; simpl in *.
       exists ni, yy1, yy2.
       rewrite (proj2 (list_find_Some _ _ ni ((i, a), (yy1, yy2)))) /=; first done.
@@ -98,7 +98,7 @@ Proof.
       Some (ni, ((i, a), yy)) /\ yy ≼ₒ{Sᵢ n} Some a ∧ yy ≡{n}≡ y !! i) as Hgg'.
     { intros ?? Hxi.
       pose proof (proj2 (elem_of_map_to_list _ _ _) Hxi) as Helem.
-      apply elem_of_list_lookup_1 in Helem as (ni & Hmap).
+      apply list_elem_of_lookup_1 in Helem as (ni & Hmap).
       eapply Forall2_lookup_l in Hgg as (yy & ? & Hgg); eauto; simpl in *.
       exists ni, yy.
       rewrite (proj2 (list_find_Some _ _ ni ((i, a), yy))) /=; first done.

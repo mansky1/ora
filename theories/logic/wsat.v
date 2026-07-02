@@ -1,7 +1,7 @@
 From stdpp Require Export coPset.
 From iris.algebra Require Import gset coPset.
 From iris.proofmode Require Import proofmode.
-From iris_ora.logic Require Export logic own algebra.
+From iris_ora.logic Require Export logic own.
 From iris_ora.algebra Require Import ext_order gmap_view.
 From iris.prelude Require Import options.
 
@@ -46,7 +46,7 @@ Local Existing Instances wsat_inG wsatGpreS_inv wsatGpreS_enabled wsatGpreS_disa
 Definition invariant_unfold {Σ} (P : iProp Σ) : later (iProp Σ) :=
   Next P.
 Definition ownI `{!wsatGS Σ} (i : positive) (P : iProp Σ) : iProp Σ :=
-  own invariant_name (gmap_view_frag i DfracDiscarded (invariant_unfold P)).
+  own invariant_name (gmap_view_frag i DfracDiscarded (to_agree (invariant_unfold P))).
 #[export] Typeclasses Opaque ownI.
 Global Instance: Params (@invariant_unfold) 1 := {}.
 Global Instance: Params (@ownI) 3 := {}.
@@ -63,7 +63,7 @@ Global Instance: Params (@ownD) 3 := {}.
 
 Definition wsat `{!wsatGS Σ} : iProp Σ :=
   locked (∃ I : gmap positive (iProp Σ),
-    own invariant_name (gmap_view_auth (DfracOwn 1) (invariant_unfold <$> I)) ∗
+    own invariant_name (gmap_view_auth (DfracOwn 1) (to_agree <$> (invariant_unfold <$> I))) ∗
     [∗ map] i ↦ Q ∈ I, ▷ Q ∗ ownD {[i]} ∨ ownE {[i]})%I.
 
 Section wsat.
@@ -118,15 +118,16 @@ Lemma ownD_singleton_twice i : ownD {[i]} ∗ ownD {[i]} ⊢ False.
 Proof. rewrite ownD_disjoint. iIntros (?); set_solver. Qed.
 
 Lemma invariant_lookup (I : gmap positive (iProp Σ)) i P :
-  own invariant_name (gmap_view_auth (DfracOwn 1) (invariant_unfold <$> I)) ∗
-  own invariant_name (gmap_view_frag i DfracDiscarded (invariant_unfold P)) ⊢
+  own invariant_name (gmap_view_auth (DfracOwn 1) (to_agree <$> (invariant_unfold <$> I))) ∗
+  own invariant_name (gmap_view_frag i DfracDiscarded (to_agree (invariant_unfold P))) ⊢
   ∃ Q, ⌜I !! i = Some Q⌝ ∗ ▷ (Q ≡ P).
 Proof.
-  rewrite -own_op own_valid gmap_view_both_validI bi.and_elim_r.
-  rewrite lookup_fmap option_equivI.
-  case: (I !! i)=> [Q|] /=; last by eauto.
-  iIntros "?". iExists Q; iSplit; first done.
-  by rewrite later_equivI.
+  rewrite -own_op own_valid gmap_view_both_validI_total.
+  iIntros "[%Q' (_& _ & HQ' & Hval & Hincl)]". rewrite !lookup_fmap.
+  case: (I !! i)=> [Q|] /=; last first.
+  { iDestruct "HQ'" as %?. done. }
+  iDestruct "HQ'" as %[= <-]. iExists Q; iSplit; first done.
+  rewrite to_agree_includedI internal_eq_sym -later_equivI. done.
 Qed.
 
 Lemma ownI_open i P : wsat ∗ ownI i P ∗ ownE {[i]} ⊢ wsat ∗ ▷ P ∗ ownD {[i]}.
@@ -164,11 +165,11 @@ Proof.
       as (i & [? HIi%not_elem_of_dom]%not_elem_of_union & ?); eauto. }
   iDestruct "HE" as (X) "[Hi HE]"; iDestruct "Hi" as %(i & -> & HIi & ?).
   iMod (own_update with "Hw") as "[Hw HiP]".
-  { eapply (gmap_view_alloc _ i DfracDiscarded); last done.
-    by rewrite /= lookup_fmap HIi. }
+  { eapply (gmap_view_alloc _ i DfracDiscarded (to_agree _)); [|done..].
+    by rewrite /= !lookup_fmap HIi. }
   iModIntro; iExists i;  iSplit; [done|]. rewrite /ownI; iFrame "HiP".
   iExists (<[i:=P]>I); iSplitL "Hw".
-  { by rewrite fmap_insert. }
+  { by rewrite !fmap_insert. }
   iApply (big_sepM_insert _ I); first done.
   iFrame "HI". iLeft. by rewrite /ownD; iFrame.
 Qed.
@@ -185,12 +186,12 @@ Proof.
       as (i & [? HIi%not_elem_of_dom]%not_elem_of_union & ?); eauto. }
   iDestruct "HD" as (X) "[Hi HD]"; iDestruct "Hi" as %(i & -> & HIi & ?).
   iMod (own_update with "Hw") as "[Hw HiP]".
-  { eapply (gmap_view_alloc _ i DfracDiscarded); last done.
-    by rewrite /= lookup_fmap HIi. }
+  { eapply (gmap_view_alloc _ i DfracDiscarded (to_agree _)); [|done..].
+    by rewrite /= !lookup_fmap HIi. }
   iModIntro; iExists i;  iSplit; [done|]. rewrite /ownI; iFrame "HiP".
   rewrite -/(ownD _). iFrame "HD".
   iIntros "HE". iExists (<[i:=P]>I); iSplitL "Hw".
-  { by rewrite fmap_insert. }
+  { by rewrite !fmap_insert. }
   iApply (big_sepM_insert _ I); first done.
   iFrame "HI". by iRight.
 Qed.

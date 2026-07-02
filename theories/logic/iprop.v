@@ -1,8 +1,9 @@
 From iris.algebra Require Import gmap.
 From iris.algebra Require cofe_solver.
 From iris_ora.algebra Require Import gmap.
-From iris_ora.logic Require Export oupred algebra.
+From iris_ora.logic Require Export oupred.
 From iris.prelude Require Import options.
+
 
 (** In this file we construct the type [iProp] of propositions of the Iris
 logic. This is done by solving the following recursive domain equation:

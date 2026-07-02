@@ -1,5 +1,5 @@
 From iris.algebra Require Import proofmode_classes.
-From iris.proofmode Require Import classes.
+From iris.proofmode Require Import classes class_instances_cmra.
 From iris_ora.logic Require Export derived.
 From iris.prelude Require Import options.
 Import oupred.ouPred.
@@ -9,37 +9,35 @@ Section class_instances.
   Context {M : uora}.
   Implicit Types P Q R : ouPred M.
 
-  Global Instance into_pure_ora_valid `{!OraDiscrete A} (a : A) :
-    @IntoPure (ouPredI M) (✓ a) (✓ a).
-  Proof. by rewrite /IntoPure discrete_valid. Qed.
+  (* these are redundant, but speed up inference (it's still slow) *)
+  Global Instance into_pure_internal_ora_valid `{!OraDiscrete A} (a : A) :
+    @IntoPure (ouPred M) (✓ a) (✓ a).
+  Proof. apply _. Qed.
 
-  Global Instance from_pure_cmra_valid {A : ora} (a : A) :
-    @FromPure (ouPredI M) true (✓ a) (✓ a).
-  Proof.
-    rewrite /FromPure /= /bi_affinely.
-    eapply bi.pure_elim; first apply bi.and_elim_r.
-    intros; rewrite -ouPred.ora_valid_intro //.
-    apply bi.and_elim_l.
-  Qed.
+  Global Instance from_pure_internal_ora_valid {A : ora} (a : A) :
+    @FromPure (ouPred M) false (✓ a) (✓ a).
+  Proof. apply _. Qed.
 
+  Remove Hints into_pure_internal_cmra_valid from_pure_internal_cmra_valid : typeclass_instances.
+  
   Global Instance from_sep_ownM (a b1 b2 : M) :
     IsOp(A := ora_cmraR M) a b1 b2 →
     FromSep (ouPred_ownM a) (ouPred_ownM b1) (ouPred_ownM b2).
   Proof. intros. by rewrite /FromSep -ownM_op -(is_op(A := ora_cmraR M)). Qed.
-(*  (* TODO: Improve this instance with generic own simplification machinery
+  (* TODO: Improve this instance with generic own simplification machinery
   once https://gitlab.mpi-sws.org/iris/iris/-/issues/460 is fixed *)
   Global Instance combine_sep_as_ownM (a b1 b2 : M) :
-    IsOp a b1 b2 →
-    CombineSepAs (uPred_ownM b1) (uPred_ownM b2) (uPred_ownM a).
-  Proof. intros. by rewrite /CombineSepAs -ownM_op -is_op. Qed.
+    IsOp (a : ora_cmraR _) b1 b2 →
+    CombineSepAs (ouPred_ownM b1) (ouPred_ownM b2) (ouPred_ownM a).
+  Proof. intros. by rewrite /CombineSepAs -ownM_op -(is_op(A := ora_cmraR _)). Qed.
   (* TODO: Improve this instance with generic own validity simplification
   machinery once https://gitlab.mpi-sws.org/iris/iris/-/issues/460 is fixed *)
   Global Instance combine_sep_gives_ownM (b1 b2 : M) :
-    CombineSepGives (uPred_ownM b1) (uPred_ownM b2) (✓ (b1 ⋅ b2)).
+    CombineSepGives (ouPred_ownM b1) (ouPred_ownM b2) (✓ (b1 ⋅ b2 : ora_cmraR _)).
   Proof.
     intros. rewrite /CombineSepGives -ownM_op ownM_valid.
     by apply: bi.persistently_intro.
-  Qed.*)
+  Qed.
   Global Instance from_sep_ownM_core_id (a b1 b2 : M) :
     IsOp(A := ora_cmraR M) a b1 b2 → TCOr (OraCoreId b1) (OraCoreId b2) →
     FromAnd (ouPred_ownM a) (ouPred_ownM b1) (ouPred_ownM b2).

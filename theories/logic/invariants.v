@@ -44,10 +44,9 @@ Section inv.
   Lemma fresh_inv_name (E : gset positive) N : ∃ i, i ∉ E ∧ i ∈ (↑N:coPset).
   Proof.
     exists (coPpick (↑ N ∖ gset_to_coPset E)).
-    rewrite -elem_of_gset_to_coPset (comm and) -elem_of_difference.
-    apply coPpick_elem_of=> Hfin.
-    eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
-    apply gset_to_coPset_finite.
+    opose proof (coPpick_elem_of (↑ N ∖ gset_to_coPset E) _); last set_solver.
+    apply set_infinite_non_empty, difference_infinite, gset_to_coPset_finite.
+    apply nclose_infinite.
   Qed.
 
   Lemma own_inv_alloc N E P : ▷ P ={E}=∗ own_inv N P.

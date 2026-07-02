@@ -1,5 +1,4 @@
 (* modified from iris.algebra.view *)
-(* this could potentially go in ORA *)
 
 From iris.algebra Require Export updates local_updates agree view.
 From iris.algebra Require Import proofmode_classes big_op.
@@ -89,9 +88,7 @@ Section ora.
     OfeDiscrete A → OraDiscrete B → ViewRelDiscrete rel →
     OraDiscrete viewR.
   Proof.
-    intros; assert (CmraDiscrete viewR).
-    { apply view_cmra_discrete; try apply _.
-      apply @ora_cmra_discrete, _. }
+    intros.
     split; [apply _|..]; [move=> -[[[dq ag]|] b]; rewrite ?view_valid_eq ?view_validN_eq /=|].
     - rewrite -cmra_discrete_valid_iff //.
     - intros (? & ?); econstructor; eauto.

@@ -96,7 +96,7 @@ Qed.
 Lemma fupd_soundness_no_lc0 `{!invGpreS Σ} E1 E2 (P: iProp Σ) `{!Plain P} `{!Absorbing P}:
   (∀ `{Hinv: !invGS_gen HasNoLc Σ}, ⊢ |={E1,E2}=> P) → ⊢ P.
 Proof.
-  iIntros (Hfupd). apply later_soundness, bupd_plain_soundness; first apply _. iMod wsat_alloc as (Hw) "[Hw HE]".
+  iIntros (Hfupd). apply modal_soundness with [MBUpd; MLater]; [apply _..|]. iMod wsat_alloc as (Hw) "[Hw HE]".
   (* We don't actually want any credits, but we need the [lcGS]. *)
   iMod (later_credits.le_upd.lc_alloc 0) as (Hc) "[_ Hc]".
   set (Hi := InvG HasNoLc _ Hw Hc).
@@ -109,7 +109,7 @@ Qed.
 Lemma fupd_soundness_no_lc `{!invGpreS Σ} E1 E2 (P : iProp Σ) `{!Plain P} `{!Absorbing P} m :
   (∀ `{Hinv: !invGS_gen HasNoLc Σ}, £ m ={E1,E2}=∗ P) → ⊢ P.
 Proof.
-  iIntros (Hfupd). apply later_soundness, bupd_plain_soundness; first apply _. iMod wsat_alloc as (Hw) "[Hw HE]".
+  iIntros (Hfupd). apply modal_soundness with [MBUpd; MLater]; [apply _..|]. iMod wsat_alloc as (Hw) "[Hw HE]".
   (* We don't actually want any credits, but we need the [lcGS]. *)
   iMod (later_credits.le_upd.lc_alloc m) as (Hc) "[_ Hc]".
   set (Hi := InvG HasNoLc _ Hw Hc).
@@ -145,7 +145,7 @@ Implicit Types (P : iProp Σ).
 Lemma bupd_plainly P `{!Absorbing P}: (|==> ■ P) ⊢ P.
 Proof.
   rewrite -{2}(absorbing P).
-  rewrite /bi_absorbingly; ouPred.unseal; split => n x Hnx /= Hng.
+  rewrite /plainly /bi_absorbingly; ouPred.unseal; split => n x Hnx /= Hng.
   destruct (Hng n ε) as [? [_ Hng']]; try rewrite right_id; auto.
   eexists _, _; split; last by split; [apply I | apply Hng'].
   rewrite right_id //.

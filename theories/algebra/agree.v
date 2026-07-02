@@ -22,8 +22,8 @@ Proof.
   intros Hnv Hxy; split => a Ha.
   - by apply Hxy.
   - destruct x as [[|xh xc] xnn]; first done.
-    destruct (Hxy xh) as [z [Hz1 Hz2]]; simpl; auto using elem_of_list_here.
-    exists xh; split; first apply elem_of_list_here.
+    destruct (Hxy xh) as [z [Hz1 Hz2]]; simpl; auto using list_elem_of_here.
+    exists xh; split; first apply list_elem_of_here.
     etrans; first apply Hz2.
     eapply agree_validN_def; eauto.
 Qed.
@@ -31,8 +31,8 @@ Qed.
 Lemma agree_increasing x : Increasing x.
 Proof.
   intros y n a Ha. exists a; split; last done.
-  apply elem_of_list_lookup in Ha; destruct Ha as [i Ha].
-  apply elem_of_list_lookup. exists (length x + i).
+  apply list_elem_of_lookup in Ha; destruct Ha as [i Ha].
+  apply list_elem_of_lookup. exists (length x + i).
   rewrite lookup_app_r; last lia.
   by replace (length x + i - length x) with i by lia.
 Qed.
@@ -129,20 +129,20 @@ Proof. by constructor. Qed.
 Global Instance agree_ora_discrete : OfeDiscrete A → OraDiscrete agreeR.
 Proof.
   intros HD. split.
-  - intros x y [H H'] n; split=> a; setoid_rewrite <-(discrete_iff_0 _ _); auto.
+  - intros x y [H H'] n; split=> a; setoid_rewrite <-(discrete_iff_0 _ _ _); auto.
   - intros x; rewrite agree_validN_def=> Hv n. apply agree_validN_def=> a b ??.
-    apply discrete_iff_0; auto.
+    apply (discrete_iff_0 _ _ _); auto.
   - intros x y Hxy n a Ha.
     destruct (Hxy _ Ha) as [z [Hz1 Hz2]].
-    exists z; split; auto. by setoid_rewrite <-(discrete_iff_0 _ _).
+    exists z; split; auto. by setoid_rewrite <-(discrete_iff_0 _ _ _).
 Qed.
 
 Lemma to_agree_order a b : to_agree a ≼ₒ to_agree b ↔ a ≡ b.
 Proof.
   split; last by intros ->.
   intros Hab. apply equiv_dist=>n.
-  destruct (Hab n a) as [z [Hz1 Hz2]]; first by apply elem_of_list_singleton.
-  by apply elem_of_list_singleton in Hz1; subst.
+  destruct (Hab n a) as [z [Hz1 Hz2]]; first by apply list_elem_of_singleton.
+  by apply list_elem_of_singleton in Hz1; subst.
 Qed.
 
 Global Instance agree_cancelable x : OraCancelable x.
@@ -169,7 +169,7 @@ Section agree_map.
   Global Instance agree_map_morphism : OraMorphism (agree_map f).
   Proof using Hf.
     split; first apply _.
-    - intros n x y Hxy a; setoid_rewrite elem_of_list_fmap; intros [z [-> Hz]].
+    - intros n x y Hxy a; setoid_rewrite list_elem_of_fmap; intros [z [-> Hz]].
       destruct (Hxy _ Hz) as [w [Hw1 Hw2]].
       exists (f w); split; eauto.
       by rewrite Hw2.

@@ -586,7 +586,7 @@ End total_core.
 (* Qed. *)
 
 (** ** Discrete *)
-Instance ora_cmra_discrete `{!OraDiscrete A} : CmraDiscrete A.
+Global Instance ora_cmra_discrete `{!OraDiscrete A} : CmraDiscrete A.
 Proof.
   destruct OraDiscrete0; split; auto.
 Qed.
@@ -716,7 +716,7 @@ Section uora.
   Proof. intros ???. by rewrite !left_id. Qed.
 
   (* For big ops *)
-  Global Instance ora_monoid : Monoid (@op A _) := cmra_monoid.
+  Global Instance ora_monoid : Monoid (@op A _) _ := cmra_monoid.
 End uora.
 
 #[export] Hint Immediate uora_unit_ora_total : core.
