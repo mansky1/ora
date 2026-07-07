@@ -9,7 +9,7 @@ Context {SI : sidx} `{A : !cmra} `{!CmraTotal A}.
 Instance incl_orderN : OraOrderN A := includedN.
 Instance incl_order : OraOrder A := λ x y, ∀n, x ≼{n} y.
 
-Global Instance incl_increasing x : Increasing x.
+Local Instance incl_increasing' x : Increasing x.
 Proof.
   intros ?; eexists.
   by rewrite comm.
@@ -54,6 +54,9 @@ Qed.
 End incl.
 
 #[global] Notation inclR A := (Ora A (incl_ora_mixin(A := A))).
+
+Global Instance incl_increasing `{CmraTotal A} (x : inclR A) : Increasing x.
+Proof. rewrite /ora_car /ora_op /ora_order; apply incl_increasing'. Qed.
 
 (*Section functor.
 
