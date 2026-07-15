@@ -1,20 +1,20 @@
-# Forward most targets to Coq makefile (with some trick to make this phony)
-%: Makefile.coq phony
-	+@make -f Makefile.coq $@
+# Forward most targets to Rocq makefile (with some trick to make this phony)
+%: Makefile.rocq phony
+	+@make -f Makefile.rocq $@
 
-all: Makefile.coq
-	+@make -f Makefile.coq all
+all: Makefile.rocq
+	+@make -f Makefile.rocq all
 .PHONY: all
 
-clean: Makefile.coq
-	+@make -f Makefile.coq clean
+clean: Makefile.rocq
+	+@make -f Makefile.rocq clean
 	find theories tests exercises solutions \( -name "*.d" -o -name "*.vo" -o -name "*.vo[sk]" -o -name "*.aux" -o -name "*.cache" -o -name "*.glob" -o -name "*.vio" \) -print -delete || true
-	rm -f Makefile.coq .lia.cache
+	rm -f Makefile.rocq .lia.cache
 .PHONY: clean
 
 # Create Coq Makefile.
-Makefile.coq: _CoqProject Makefile
-	"$(COQBIN)coq_makefile" -f _CoqProject -o Makefile.coq
+Makefile.rocq: _RocqProject Makefile
+	"$(COQBIN)rocq" makefile -f _RocqProject -o Makefile.rocq
 
 # Install build-dependencies
 build-dep/opam: opam Makefile
@@ -34,7 +34,7 @@ build-dep: build-dep/opam phony
 
 # Some files that do *not* need to be forwarded to Makefile.coq
 Makefile: ;
-_CoqProject: ;
+_RocqProject: ;
 opam: ;
 
 # Phony wildcard targets

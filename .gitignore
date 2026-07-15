@@ -1,6 +1,8 @@
 *.cache
 /Makefile.coq
 /Makefile.coq.conf
+/Makefile.rocq
+/Makefile.rocq.conf
 build-dep/
 *~
 *.aux
@@ -11,4 +13,5 @@ build-dep/
 *.vok
 .coqdeps.d
 .Makefile.coq.d
+.Makefile.rocq.d
 _opam
