@@ -44,9 +44,12 @@ Section definitions.
     @ghost_map_elem = @ghost_map_elem_def := ghost_map_elem_aux.(seal_eq).
 End definitions.
 
-Notation "k ↪[ γ ] dq v" := (ghost_map_elem γ k dq v)
-  (at level 20, γ at level 50, dq custom dfrac at level 1,
-   format "k  ↪[ γ ] dq  v") : bi_scope.
+Notation "γ ↪●MAP dq m" := (ghost_map_auth γ dq m)
+  (at level 20, dq custom dfrac at level 1,
+   format "γ  ↪●MAP dq  m") : bi_scope.
+Notation "γ ↪◯MAP[ k ] dq v" := (ghost_map_elem γ k dq v)
+  (at level 20, dq custom dfrac at level 1,
+   format "γ  ↪◯MAP[ k ] dq  v") : bi_scope.
 
 Local Ltac unseal := rewrite
   ?ghost_map_auth_unseal /ghost_map_auth_def
@@ -57,21 +60,20 @@ Section lemmas.
   Implicit Types (k : K) (v : V) (dq : dfrac) (q : Qp) (m : gmap K V).
 
   (** * Lemmas about the map elements *)
-  Global Instance ghost_map_elem_timeless k γ dq v : Timeless (k ↪[γ]{dq} v).
+  Global Instance ghost_map_elem_timeless k γ dq v : Timeless (γ ↪◯MAP[k]{dq} v).
   Proof. unseal. apply _. Qed.
-  Global Instance ghost_map_elem_persistent k γ v : Persistent (k ↪[γ]□ v).
+  Global Instance ghost_map_elem_persistent k γ v : Persistent (γ ↪◯MAP[k]□ v).
   Proof. unseal. apply own_core_persistent, view_frag_core_id, iris.algebra.gmap.gmap_singleton_core_id, _. Qed.
-  Global Instance ghost_map_elem_fractional k γ v : Fractional (λ q, k ↪[γ]{#q} v)%I.
+  Global Instance ghost_map_elem_affine k γ v : Affine (γ ↪◯MAP[k]□ v).
+  Proof. unseal. apply _. Qed.
+  Global Instance ghost_map_elem_fractional k γ v : Fractional (λ q, γ ↪◯MAP[k]{#q} v)%I.
   Proof. unseal. intros p q. rewrite -own_op -gmap_view_frag_add agree_idemp //. Qed.
   Global Instance ghost_map_elem_as_fractional k γ q v :
-    AsFractional (k ↪[γ]{#q} v) (λ q, k ↪[γ]{#q} v)%I q.
+    AsFractional (γ ↪◯MAP[k]{#q} v) (λ q, γ ↪◯MAP[k]{#q} v)%I q.
   Proof. split; first done. apply _. Qed.
-  Global Instance ghost_map_elem_affine k γ v : Affine (k ↪[γ]□ v).
-  Proof. unseal. apply _.
-Qed.
 
   Local Lemma ghost_map_elems_unseal γ m dq :
-    ([∗ map] k ↦ v ∈ m, k ↪[γ]{dq} v) ==∗
+    ([∗ map] k ↦ v ∈ m, γ ↪◯MAP[k]{dq} v) ==∗
     own γ ([^op map] k↦v ∈ m, gmap_view_frag (V:=iris.algebra.agree.agreeR (leibnizO V)) k dq (to_agree v)).
   Proof.
     unseal. destruct (decide (m = ∅)) as [->|Hne].
@@ -79,21 +81,21 @@ Qed.
     - rewrite big_opM_own //. iIntros "?". done.
   Qed.
 
-  Lemma ghost_map_elem_valid k γ dq v : k ↪[γ]{dq} v -∗ ⌜✓ dq⌝.
+  Lemma ghost_map_elem_valid k γ dq v : γ ↪◯MAP[k]{dq} v -∗ ⌜✓ dq⌝.
   Proof.
     unseal. iIntros "Helem".
     iDestruct (own_valid with "Helem") as %?%gmap_view_frag_valid.
     naive_solver.
   Qed.
   Lemma ghost_map_elem_valid_2 k γ dq1 dq2 v1 v2 :
-    k ↪[γ]{dq1} v1 -∗ k ↪[γ]{dq2} v2 -∗ ⌜✓ (dq1 ⋅ dq2) ∧ v1 = v2⌝.
+    γ ↪◯MAP[k]{dq1} v1 -∗ γ ↪◯MAP[k]{dq2} v2 -∗ ⌜✓ (dq1 ⋅ dq2) ∧ v1 = v2⌝.
   Proof.
     unseal. iIntros "H1 H2".
     iCombine "H1 H2" gives %[? Hag]%gmap_view_frag_op_valid.
     rewrite to_agree_op_valid_L in Hag. done.
   Qed.
   Lemma ghost_map_elem_agree k γ dq1 dq2 v1 v2 :
-    k ↪[γ]{dq1} v1 -∗ k ↪[γ]{dq2} v2 -∗ ⌜v1 = v2⌝.
+    γ ↪◯MAP[k]{dq1} v1 -∗ γ ↪◯MAP[k]{dq2} v2 -∗ ⌜v1 = v2⌝.
   Proof.
     iIntros "Helem1 Helem2".
     iDestruct (ghost_map_elem_valid_2 with "Helem1 Helem2") as %[_ ?].
@@ -101,7 +103,7 @@ Qed.
   Qed.
 
   Global Instance ghost_map_elem_combine_gives γ k v1 dq1 v2 dq2 : 
-    CombineSepGives (k ↪[γ]{dq1} v1) (k ↪[γ]{dq2} v2) ⌜✓ (dq1 ⋅ dq2) ∧ v1 = v2⌝.
+    CombineSepGives (γ ↪◯MAP[k]{dq1} v1) (γ ↪◯MAP[k]{dq2} v2) ⌜✓ (dq1 ⋅ dq2) ∧ v1 = v2⌝.
   Proof.
     rewrite /CombineSepGives. iIntros "[H1 H2]".
     iDestruct (ghost_map_elem_valid_2 with "H1 H2") as %[H1 H2].
@@ -109,14 +111,14 @@ Qed.
   Qed.
 
   Lemma ghost_map_elem_combine k γ dq1 dq2 v1 v2 :
-    k ↪[γ]{dq1} v1 -∗ k ↪[γ]{dq2} v2 -∗ k ↪[γ]{dq1 ⋅ dq2} v1 ∧ ⌜v1 = v2⌝.
+    γ ↪◯MAP[k]{dq1} v1 -∗ γ ↪◯MAP[k]{dq2} v2 -∗ γ ↪◯MAP[k]{dq1 ⋅ dq2} v1 ∧ ⌜v1 = v2⌝.
   Proof.
     iIntros "Hl1 Hl2". iDestruct (ghost_map_elem_agree with "Hl1 Hl2") as %->.
     unseal. iCombine "Hl1 Hl2" as "Hl". rewrite agree_idemp. eauto with iFrame.
   Qed.
 
   Global Instance ghost_map_elem_combine_as k γ dq1 dq2 v1 v2 :
-    CombineSepAs (k ↪[γ]{dq1} v1) (k ↪[γ]{dq2} v2) (k ↪[γ]{dq1 ⋅ dq2} v1) | 60. 
+    CombineSepAs (γ ↪◯MAP[k]{dq1} v1) (γ ↪◯MAP[k]{dq2} v2) (γ ↪◯MAP[k]{dq1 ⋅ dq2} v1) | 60. 
     (* higher cost than the Fractional instance [combine_sep_fractional_bwd],
        which kicks in for #qs *)
   Proof.
@@ -125,30 +127,30 @@ Qed.
   Qed.
 
   Lemma ghost_map_elem_split k γ dq1 dq2 v :
-    k ↪[γ]{dq1 ⋅ dq2} v ⊣⊢ k ↪[γ]{dq1} v ∗ k ↪[γ]{dq2} v.
+    γ ↪◯MAP[k]{dq1 ⋅ dq2} v ⊣⊢ γ ↪◯MAP[k]{dq1} v ∗ γ ↪◯MAP[k]{dq2} v.
   Proof.
     unseal. by rewrite -own_op -gmap_view_frag_op agree_idemp.
   Qed.
 
   Lemma ghost_map_elem_frac_ne γ k1 k2 dq1 dq2 v1 v2 :
-    ¬ ✓ (dq1 ⋅ dq2) → k1 ↪[γ]{dq1} v1 -∗ k2 ↪[γ]{dq2} v2 -∗ ⌜k1 ≠ k2⌝.
+    ¬ ✓ (dq1 ⋅ dq2) → γ ↪◯MAP[k1]{dq1} v1 -∗ γ ↪◯MAP[k2]{dq2} v2 -∗ ⌜k1 ≠ k2⌝.
   Proof.
     iIntros (?) "H1 H2"; iIntros (->).
     by iDestruct (ghost_map_elem_valid_2 with "H1 H2") as %[??].
   Qed.
   Lemma ghost_map_elem_ne γ k1 k2 dq2 v1 v2 :
-    k1 ↪[γ] v1 -∗ k2 ↪[γ]{dq2} v2 -∗ ⌜k1 ≠ k2⌝.
+    γ ↪◯MAP[k1] v1 -∗ γ ↪◯MAP[k2]{dq2} v2 -∗ ⌜k1 ≠ k2⌝.
   Proof. apply ghost_map_elem_frac_ne. apply: exclusive_l. Qed.
 
   (** Make an element read-only. *)
   Lemma ghost_map_elem_persist k γ dq v :
-    k ↪[γ]{dq} v ==∗ k ↪[γ]□ v.
+    γ ↪◯MAP[k]{dq} v ==∗ γ ↪◯MAP[k]□ v.
   Proof. intros; unseal. iApply own_update. apply (gmap_view_frag_persist(V := iris.algebra.agree.agreeR _)). Qed.
 
   (** * Lemmas about [ghost_map_auth] *)
   Lemma ghost_map_alloc_strong P m :
     pred_infinite P →
-    ⊢ |==> ∃ γ, ⌜P γ⌝ ∧ ghost_map_auth γ 1 m ∗ [∗ map] k ↦ v ∈ m, k ↪[γ] v.
+    ⊢ |==> ∃ γ, ⌜P γ⌝ ∧ ghost_map_auth γ 1 m ∗ [∗ map] k ↦ v ∈ m, γ ↪◯MAP[k] v.
   Proof.
     unseal. intros.
     iMod (own_alloc_strong (gmap_view_auth (V:=iris.algebra.agree.agreeR (leibnizO V)) (DfracOwn 1) ∅) P)
@@ -170,7 +172,7 @@ Qed.
     intros. iMod (ghost_map_alloc_strong P ∅) as (γ) "(% & Hauth & _)"; eauto.
   Qed.
   Lemma ghost_map_alloc m :
-    ⊢ |==> ∃ γ, ghost_map_auth γ 1 m ∗ [∗ map] k ↦ v ∈ m, k ↪[γ] v.
+    ⊢ |==> ∃ γ, ghost_map_auth γ 1 m ∗ [∗ map] k ↦ v ∈ m, γ ↪◯MAP[k] v.
   Proof.
     iMod (ghost_map_alloc_strong (λ _, True) m) as (γ) "[_ Hmap]".
     - by apply pred_infinite_True.
@@ -216,7 +218,7 @@ Qed.
 
   (** * Lemmas about the interaction of [ghost_map_auth] with the elements *)
   Lemma ghost_map_lookup {γ q m k dq v} :
-    ghost_map_auth γ q m -∗ k ↪[γ]{dq} v -∗ ⌜m !! k = Some v⌝.
+    ghost_map_auth γ q m -∗ γ ↪◯MAP[k]{dq} v -∗ ⌜m !! k = Some v⌝.
   Proof.
     unseal. iIntros "Hauth Hel".
     iCombine "Hauth Hel" gives
@@ -231,21 +233,21 @@ Qed.
   Qed.
 
   Global Instance ghost_map_lookup_combine_gives_1 {γ q m k dq v} :
-    CombineSepGives (ghost_map_auth γ q m) (k ↪[γ]{dq} v) ⌜m !! k = Some v⌝.
+    CombineSepGives (ghost_map_auth γ q m) (γ ↪◯MAP[k]{dq} v) ⌜m !! k = Some v⌝.
   Proof.
     rewrite /CombineSepGives. iIntros "[H1 H2]".
     iDestruct (ghost_map_lookup with "H1 H2") as %->. eauto.
   Qed.
 
   Global Instance ghost_map_lookup_combine_gives_2 {γ q m k dq v} :
-    CombineSepGives (k ↪[γ]{dq} v) (ghost_map_auth γ q m) ⌜m !! k = Some v⌝.
+    CombineSepGives (γ ↪◯MAP[k]{dq} v) (ghost_map_auth γ q m) ⌜m !! k = Some v⌝.
   Proof.
     rewrite /CombineSepGives comm. apply ghost_map_lookup_combine_gives_1.
   Qed.
 
   Lemma ghost_map_insert {γ m} k v :
     m !! k = None →
-    ghost_map_auth γ 1 m ==∗ ghost_map_auth γ 1 (<[k := v]> m) ∗ k ↪[γ] v.
+    ghost_map_auth γ 1 m ==∗ ghost_map_auth γ 1 (<[k := v]> m) ∗ γ ↪◯MAP[k] v.
   Proof.
     unseal. intros Hm. rewrite -own_op.
     iApply own_update. rewrite fmap_insert. apply: gmap_view_alloc; [|done..].
@@ -253,7 +255,7 @@ Qed.
   Qed.
   Lemma ghost_map_insert_persist {γ m} k v :
     m !! k = None →
-    ghost_map_auth γ 1 m ==∗ ghost_map_auth γ 1 (<[k := v]> m) ∗ k ↪[γ]□ v.
+    ghost_map_auth γ 1 m ==∗ ghost_map_auth γ 1 (<[k := v]> m) ∗ γ ↪◯MAP[k]□ v.
   Proof.
     iIntros (?) "Hauth".
     iMod (ghost_map_insert k with "Hauth") as "[$ Helem]"; first done.
@@ -261,14 +263,14 @@ Qed.
   Qed.
 
   Lemma ghost_map_delete {γ m k v} :
-    ghost_map_auth γ 1 m -∗ k ↪[γ] v ==∗ ghost_map_auth γ 1 (delete k m).
+    ghost_map_auth γ 1 m -∗ γ ↪◯MAP[k] v ==∗ ghost_map_auth γ 1 (delete k m).
   Proof.
     unseal. apply bi.entails_wand, bi.wand_intro_r. rewrite -own_op.
     iApply own_update. rewrite fmap_delete. apply: gmap_view_delete.
   Qed.
 
   Lemma ghost_map_update {γ m k v} w :
-    ghost_map_auth γ 1 m -∗ k ↪[γ] v ==∗ ghost_map_auth γ 1 (<[k := w]> m) ∗ k ↪[γ] w.
+    ghost_map_auth γ 1 m -∗ γ ↪◯MAP[k] v ==∗ ghost_map_auth γ 1 (<[k := w]> m) ∗ γ ↪◯MAP[k] w.
   Proof.
     unseal. apply bi.entails_wand, bi.wand_intro_r. rewrite -!own_op.
     apply own_update. rewrite fmap_insert. apply: gmap_view_replace; done.
@@ -277,7 +279,7 @@ Qed.
   (** Big-op versions of above lemmas *)
   Lemma ghost_map_lookup_big {γ q m} m0 :
     ghost_map_auth γ q m -∗
-    ([∗ map] k↦v ∈ m0, k ↪[γ] v) -∗
+    ([∗ map] k↦v ∈ m0, γ ↪◯MAP[k] v) -∗
     ⌜m0 ⊆ m⌝.
   Proof.
     iIntros "Hauth Hfrag". rewrite map_subseteq_spec. iIntros (k v Hm0).
@@ -290,7 +292,7 @@ Qed.
   Lemma ghost_map_insert_big {γ m} m' :
     m' ##ₘ m →
     ghost_map_auth γ 1 m ⊢ |==>
-    ghost_map_auth γ 1 (m' ∪ m) ∗ ([∗ map] k ↦ v ∈ m', k ↪[γ] v).
+    ghost_map_auth γ 1 (m' ∪ m) ∗ ([∗ map] k ↦ v ∈ m', γ ↪◯MAP[k] v).
   Proof.
     unseal. intros ?. rewrite -big_opM_own_1 -own_op. iApply own_update.
     etrans; first apply: (gmap_view_alloc_big _ (to_agree <$> m') (DfracOwn 1)).
@@ -302,7 +304,7 @@ Qed.
   Lemma ghost_map_insert_persist_big {γ m} m' :
     m' ##ₘ m →
     ghost_map_auth γ 1 m ⊢ |==>
-    ghost_map_auth γ 1 (m' ∪ m) ∗ ([∗ map] k ↦ v ∈ m', k ↪[γ]□ v).
+    ghost_map_auth γ 1 (m' ∪ m) ∗ ([∗ map] k ↦ v ∈ m', γ ↪◯MAP[k]□ v).
   Proof.
     iIntros (Hdisj) "Hauth".
     iMod (ghost_map_insert_big m' with "Hauth") as "[$ Helem]"; first done.
@@ -312,7 +314,7 @@ Qed.
 
   Lemma ghost_map_delete_big {γ m} m0 :
     ghost_map_auth γ 1 m -∗
-    ([∗ map] k↦v ∈ m0, k ↪[γ] v) ==∗
+    ([∗ map] k↦v ∈ m0, γ ↪◯MAP[k] v) ==∗
     ghost_map_auth γ 1 (m ∖ m0).
   Proof.
     iIntros "Hauth Hfrag". iMod (ghost_map_elems_unseal with "Hfrag") as "Hfrag".
@@ -325,9 +327,9 @@ Qed.
   Theorem ghost_map_update_big {γ m} m0 m1 :
     dom m0 = dom m1 →
     ghost_map_auth γ 1 m -∗
-    ([∗ map] k↦v ∈ m0, k ↪[γ] v) ==∗
+    ([∗ map] k↦v ∈ m0, γ ↪◯MAP[k] v) ==∗
     ghost_map_auth γ 1 (m1 ∪ m) ∗
-        [∗ map] k↦v ∈ m1, k ↪[γ] v.
+        [∗ map] k↦v ∈ m1, γ ↪◯MAP[k] v.
   Proof.
     iIntros (?) "Hauth Hfrag".
     iMod (ghost_map_elems_unseal with "Hfrag") as "Hfrag".
